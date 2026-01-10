@@ -9,7 +9,6 @@ import ActivityFeed from './components/ActivityFeed';
 import UpcomingClasses from './components/UpcomingClasses';
 import AttendanceOverview from './components/AttendanceOverview';
 import NotificationBadge from './components/NotificationBadge';
-import WeatherWidget from './components/WeatherWidget';
 import RoleSelector from './components/RoleSelector';
 
 const DashboardContent = () => {
@@ -482,7 +481,6 @@ const DashboardContent = () => {
                 <ActivityFeed activities={recentActivities} />
               </div>
               <div className="space-y-6">
-                <WeatherWidget weather={weatherData} />
                 {(currentRole === 'teacher' || currentRole === 'student') && (
                   <UpcomingClasses classes={upcomingClasses} />
                 )}

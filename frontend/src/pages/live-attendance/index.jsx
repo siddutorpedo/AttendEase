@@ -71,7 +71,7 @@ const LiveAttendanceContent = () => {
     avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_162a57531-1763296100992.png",
     avatarAlt:
     'Professional headshot of Hispanic woman with long dark hair wearing white blouse',
-    status: 'late',
+    status: 'present',
     lastMarkedTime: '9:15 AM',
     attendanceRate: 85,
     hasAttendanceConcern: false
@@ -95,7 +95,7 @@ const LiveAttendanceContent = () => {
     avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_1dc96d634-1763295460493.png",
     avatarAlt:
     'Professional headshot of Indian woman with black hair wearing red traditional attire',
-    status: 'excused',
+    status: 'present',
     lastMarkedTime: '8:55 AM',
     attendanceRate: 88,
     hasAttendanceConcern: false
@@ -107,7 +107,7 @@ const LiveAttendanceContent = () => {
     avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_1faa738ad-1763294932464.png",
     avatarAlt:
     'Professional headshot of African American man with short hair wearing black suit',
-    status: 'unmarked',
+    status: 'present',
     lastMarkedTime: null,
     attendanceRate: 78,
     hasAttendanceConcern: false
@@ -131,7 +131,7 @@ const LiveAttendanceContent = () => {
     avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_1ce6710c7-1763295988454.png",
     avatarAlt:
     'Professional headshot of man with red hair and beard wearing plaid shirt',
-    status: 'unmarked',
+    status: 'absent',
     lastMarkedTime: null,
     attendanceRate: 82,
     hasAttendanceConcern: false
@@ -167,7 +167,7 @@ const LiveAttendanceContent = () => {
     avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_12388c5e5-1763298058472.png",
     avatarAlt:
     'Professional headshot of woman with long black hair wearing yellow blouse',
-    status: 'late',
+    status: 'present',
     lastMarkedTime: '9:20 AM',
     attendanceRate: 80,
     hasAttendanceConcern: false
@@ -179,7 +179,7 @@ const LiveAttendanceContent = () => {
     avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_1c1104fed-1763295038097.png",
     avatarAlt:
     'Professional headshot of man with short dark hair wearing gray sweater',
-    status: 'unmarked',
+    status: 'absent',
     lastMarkedTime: null,
     attendanceRate: 87,
     hasAttendanceConcern: false
@@ -233,9 +233,8 @@ const LiveAttendanceContent = () => {
 
           let newStatus = status;
           if (!status) {
-            const statusCycle = ['unmarked', 'present', 'absent', 'late', 'excused'];
-            const currentIndex = statusCycle.indexOf(student.status);
-            newStatus = statusCycle[(currentIndex + 1) % statusCycle.length];
+            // Toggle between present and absent
+            newStatus = student.status === 'present' ? 'absent' : 'present';
           }
 
           setUndoStack((stack) => [

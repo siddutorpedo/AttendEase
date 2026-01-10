@@ -9,10 +9,6 @@ const StudentCard = ({ student, onMarkAttendance, isSelected }) => {
         return 'bg-success/10 text-success border-success/20';
       case 'absent':
         return 'bg-error/10 text-error border-error/20';
-      case 'late':
-        return 'bg-warning/10 text-warning border-warning/20';
-      case 'excused':
-        return 'bg-secondary/10 text-secondary border-secondary/20';
       default:
         return 'bg-muted text-muted-foreground border-border';
     }
@@ -24,10 +20,6 @@ const StudentCard = ({ student, onMarkAttendance, isSelected }) => {
         return 'CheckCircle2';
       case 'absent':
         return 'XCircle';
-      case 'late':
-        return 'Clock';
-      case 'excused':
-        return 'FileCheck';
       default:
         return 'Circle';
     }
@@ -66,18 +58,20 @@ const StudentCard = ({ student, onMarkAttendance, isSelected }) => {
                 Roll: {student?.rollNumber}
               </p>
             </div>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                student?.status
-              )}`}
-            >
-              <Icon
-                name={getStatusIcon(student?.status)}
-                size={12}
-                className="inline mr-1"
-              />
-              {student?.status?.charAt(0)?.toUpperCase() + student?.status?.slice(1)}
-            </span>
+            {(student?.status === 'present' || student?.status === 'absent') && (
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                  student?.status
+                )}`}
+              >
+                <Icon
+                  name={getStatusIcon(student?.status)}
+                  size={12}
+                  className="inline mr-1"
+                />
+                {student?.status?.charAt(0)?.toUpperCase() + student?.status?.slice(1)}
+              </span>
+            )}
           </div>
 
           {student?.lastMarkedTime && (

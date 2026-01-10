@@ -11,8 +11,6 @@ const BulkActionModal = ({ isOpen, onClose, selectedStudents, onApply }) => {
   const actionOptions = [
     { value: 'present', label: 'Mark as Present' },
     { value: 'absent', label: 'Mark as Absent' },
-    { value: 'late', label: 'Mark as Late' },
-    { value: 'excused', label: 'Mark as Excused' },
   ];
 
   const handleApply = () => {
@@ -59,7 +57,7 @@ const BulkActionModal = ({ isOpen, onClose, selectedStudents, onApply }) => {
             required
           />
 
-          {(action === 'absent' || action === 'late' || action === 'excused') && (
+          {action === 'absent' && (
             <Input
               label="Reason (Optional)"
               type="text"
