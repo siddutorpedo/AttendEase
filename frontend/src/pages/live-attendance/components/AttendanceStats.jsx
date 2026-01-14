@@ -17,24 +17,10 @@ const AttendanceStats = ({ stats }) => {
       icon: 'XCircle',
       color: 'error',
     },
-    {
-      label: 'Late',
-      value: stats?.late,
-      percentage: stats?.latePercentage,
-      icon: 'Clock',
-      color: 'warning',
-    },
-    {
-      label: 'Excused',
-      value: stats?.excused,
-      percentage: stats?.excusedPercentage,
-      icon: 'FileCheck',
-      color: 'secondary',
-    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {statCards?.map((stat) => (
         <div
           key={stat?.label}

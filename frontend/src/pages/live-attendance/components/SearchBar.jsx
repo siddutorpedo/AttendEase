@@ -3,7 +3,7 @@ import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 
 
-const SearchBar = ({ searchQuery, onSearchChange, onScanQR }) => {
+const SearchBar = ({ searchQuery, onSearchChange }) => {
   return (
     <div className="flex gap-3">
       <div className="flex-1">
@@ -14,9 +14,6 @@ const SearchBar = ({ searchQuery, onSearchChange, onScanQR }) => {
           onChange={(e) => onSearchChange(e?.target?.value)}
         />
       </div>
-      <Button variant="outline" iconName="QrCode" onClick={onScanQR}>
-        Scan QR
-      </Button>
     </div>
   );
 };

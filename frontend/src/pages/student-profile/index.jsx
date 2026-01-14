@@ -1,31 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SidebarProvider, useSidebar } from '../../contexts/SidebarContext';
 import Sidebar from '../../components/Sidebar';
 import ProfileHeader from './components/ProfileHeader';
-import PersonalInformation from './components/PersonalInformation';
-import AttendanceTimeline from './components/AttendanceTimeline';
-import AcademicPerformance from './components/AcademicPerformance';
-import GoalsAndInterventions from './components/GoalsAndInterventions';
-import CommunicationHistory from './components/CommunicationHistory';
-import UpcomingClasses from './components/UpcomingClasses';
-import ExcuseDocumentation from './components/ExcuseDocumentation';
+import AttendanceBySubject from './components/AttendanceBySubject';
+import AttendanceDistribution from './components/AttendanceDistribution';
+import SubjectAttendanceDetails from './components/SubjectAttendanceDetails';
+import { useAuth } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
 
 const StudentProfileContent = () => {
   const { isCollapsed, toggleCollapse } = useSidebar();
+  const { user } = useAuth();
+  const { students } = useData();
+  const [selectedSubject, setSelectedSubject] = useState('mathematics');
 
-  const studentData = {
-    name: "Emily Rodriguez",
-    studentId: "STU-2024-1847",
+  // Get the logged-in student's data from admin list
+  const loggedInStudent = students.find(s => s.name.toLowerCase() === user?.name.toLowerCase());
+
+  const [studentData, setStudentData] = useState({
+    name: user?.name || "Student",
+    studentId: user?.rollNo || "STU-0000",
     grade: "Grade 10",
     section: "Section A",
     enrollmentDate: "August 15, 2023",
-    profileImage: "https://img.rocket.new/generatedImages/rocket_gen_img_1e101b075-1763301339880.png",
-    profileImageAlt: "Professional student photo of Hispanic teenage girl with long dark hair wearing navy blue school uniform blazer with white collar",
+    profileImage: "https://ui-avatars.com/api/?name=" + encodeURIComponent(user?.name || "Student") + "&background=45B7D1&color=fff&size=256&bold=true&font-size=0.4",
+    profileImageAlt: `Profile photo of ${user?.name}`,
     attendanceRate: 92.5,
     daysPresent: 148,
     daysAbsent: 12,
     lateArrivals: 5,
-    email: "emily.rodriguez@attendease.edu",
+    email: loggedInStudent?.email || user?.email || "student@attendease.edu",
     phone: "+1 (555) 234-5678",
     dateOfBirth: "March 12, 2009",
     address: "456 Oak Avenue, Springfield, IL 62701",
@@ -33,6 +37,28 @@ const StudentProfileContent = () => {
     emergencyContact: "+1 (555) 234-5679",
     bloodGroup: "O+",
     medicalAlerts: "Mild asthma - inhaler available in nurse's office"
+  });
+
+  // Load profile photo from localStorage on mount
+  useEffect(() => {
+    const savedProfilePhoto = localStorage.getItem('studentProfilePhoto');
+    if (savedProfilePhoto) {
+      setStudentData(prev => ({
+        ...prev,
+        profileImage: savedProfilePhoto
+      }));
+    }
+  }, []);
+
+  const handleProfilePhotoUpdate = (imageData) => {
+    // Save to localStorage
+    localStorage.setItem('studentProfilePhoto', imageData);
+    
+    // Update state
+    setStudentData(prev => ({
+      ...prev,
+      profileImage: imageData
+    }));
   };
 
   const attendanceRecords = [
@@ -93,167 +119,22 @@ const StudentProfileContent = () => {
     note: "Illness - parent notification sent"
   }];
 
+  const subjects = [
+    { id: 'mathematics', name: 'Mathematics', totalClasses: 30, classesAttended: 28, absences: 2 },
+    { id: 'physics', name: 'Physics', totalClasses: 28, classesAttended: 27, absences: 1 },
+    { id: 'chemistry', name: 'Chemistry', totalClasses: 29, classesAttended: 28, absences: 1 },
+    { id: 'english', name: 'English', totalClasses: 31, classesAttended: 29, absences: 2 }
+  ];
 
-  const performanceData = [
-  { month: "Aug", attendance: 95, performance: 88 },
-  { month: "Sep", attendance: 92, performance: 90 },
-  { month: "Oct", attendance: 89, performance: 85 },
-  { month: "Nov", attendance: 94, performance: 92 },
-  { month: "Dec", attendance: 93, performance: 91 }];
-
-
-  const subjectGrades = [
-  { subject: "Math", grade: 92 },
-  { subject: "English", grade: 88 },
-  { subject: "Chemistry", grade: 90 },
-  { subject: "History", grade: 85 },
-  { subject: "Spanish", grade: 87 },
-  { subject: "Biology", grade: 89 }];
-
-
-  const goals = [
-  {
-    title: "Improve Attendance Rate to 95%",
-    description: "Maintain consistent attendance throughout the semester",
-    current: 148,
-    target: 160,
-    targetDate: "June 15, 2026",
-    status: "on-track"
-  },
-  {
-    title: "Reduce Late Arrivals",
-    description: "Arrive on time for all morning classes",
-    current: 5,
-    target: 0,
-    targetDate: "March 31, 2026",
-    status: "at-risk"
-  }];
-
-
-  const interventions = [
-  {
-    type: "Attendance Counseling",
-    description: "Discussed strategies for improving morning routine and time management",
-    counselor: "Ms. Patricia Johnson",
-    date: "November 15, 2025"
-  },
-  {
-    type: "Parent Meeting",
-    description: "Collaborative meeting with parents to address attendance concerns and develop support plan",
-    counselor: "Dr. Thomas Anderson",
-    date: "October 28, 2025"
-  }];
-
-
-  const communications = [
-  {
-    type: "email",
-    subject: "Attendance Improvement Notice",
-    sender: "Dr. Thomas Anderson",
-    recipient: "Maria Rodriguez (Parent)",
-    date: "December 9, 2025",
-    message: "Emily has shown significant improvement in her attendance this month. We're pleased with her progress and commitment to being present in class.",
-    attachments: null
-  },
-  {
-    type: "sms",
-    subject: "Absence Alert",
-    sender: "AttendEase System",
-    recipient: "Maria Rodriguez",
-    date: "December 4, 2025",
-    message: "Emily was marked absent from Biology class today. Please contact the school if this is unexpected.",
-    attachments: null
-  },
-  {
-    type: "meeting",
-    subject: "Progress Review Meeting",
-    sender: "Ms. Patricia Johnson",
-    recipient: "Emily Rodriguez & Maria Rodriguez",
-    date: "November 15, 2025",
-    message: "Discussed Emily's attendance patterns and academic performance. Created action plan for improvement with specific goals and timelines.",
-    attachments: ["Meeting_Notes.pdf", "Action_Plan.pdf"]
-  }];
-
-
-  const upcomingClasses = [
-  {
-    time: "09:00",
-    period: "Period 1",
-    subject: "Advanced Mathematics",
-    teacher: "Dr. James Wilson",
-    room: "Room 204",
-    status: "scheduled"
-  },
-  {
-    time: "10:30",
-    period: "Period 2",
-    subject: "English Literature",
-    teacher: "Ms. Sarah Thompson",
-    room: "Room 118",
-    status: "scheduled"
-  },
-  {
-    time: "12:00",
-    period: "Lunch",
-    subject: "Lunch Break",
-    teacher: "-",
-    room: "Cafeteria",
-    status: "scheduled"
-  },
-  {
-    time: "01:00",
-    period: "Period 3",
-    subject: "Chemistry Lab",
-    teacher: "Prof. Michael Chen",
-    room: "Lab 301",
-    status: "scheduled"
-  }];
-
-
-  const excuseSubmissions = [
-  {
-    reason: "Medical Appointment",
-    description: "Orthodontist appointment for braces adjustment",
-    absenceDate: "December 6, 2025",
-    submittedDate: "December 5, 2025",
-    status: "approved",
-    reviewedBy: "Dr. Thomas Anderson",
-    document: "Medical_Certificate.pdf"
-  },
-  {
-    reason: "Illness",
-    description: "Flu symptoms - fever and body aches",
-    absenceDate: "December 4, 2025",
-    submittedDate: "December 4, 2025",
-    status: "approved",
-    reviewedBy: "Ms. Patricia Johnson",
-    document: "Doctor_Note.pdf"
-  },
-  {
-    reason: "Family Emergency",
-    description: "Grandmother hospitalized - family visit required",
-    absenceDate: "November 20, 2025",
-    submittedDate: "November 19, 2025",
-    status: "approved",
-    reviewedBy: "Dr. Thomas Anderson",
-    document: null
-  }];
-
+  const attendanceBySubjectData = [
+    { subject: 'Mathematics', attendance: 28, absent: 2 },
+    { subject: 'Physics', attendance: 27, absent: 1 },
+    { subject: 'Chemistry', attendance: 28, absent: 1 },
+    { subject: 'English', attendance: 29, absent: 2 }
+  ];
 
   const handleEditProfile = () => {
     console.log("Edit profile clicked");
-  };
-
-  const handleAddGoal = () => {
-    console.log("Add goal clicked");
-  };
-
-  const handleSendMessage = () => {
-    console.log("Send message clicked");
-  };
-
-  const handleSubmitExcuse = (formData) => {
-    console.log("Excuse submitted:", formData);
   };
 
   return (
@@ -261,42 +142,23 @@ const StudentProfileContent = () => {
       <Sidebar isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
       <main className={`main-content ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
         <div className="min-h-screen bg-background p-6">
-          <ProfileHeader student={studentData} onEdit={handleEditProfile} />
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div className="lg:col-span-2">
-              <AttendanceTimeline records={attendanceRecords} />
-            </div>
-            <div>
-              <UpcomingClasses classes={upcomingClasses} />
-            </div>
-          </div>
+          <ProfileHeader 
+            student={studentData} 
+            onEdit={handleEditProfile}
+            onProfilePhotoUpdate={handleProfilePhotoUpdate}
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <PersonalInformation student={studentData} />
-            <AcademicPerformance
-              performanceData={performanceData}
-              subjectGrades={subjectGrades} />
-
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <GoalsAndInterventions
-              goals={goals}
-              interventions={interventions}
-              onAddGoal={handleAddGoal} />
-
-            <CommunicationHistory
-              communications={communications}
-              onSendMessage={handleSendMessage} />
-
+            <AttendanceBySubject data={attendanceBySubjectData} />
+            <AttendanceDistribution present={studentData.daysPresent} absent={studentData.daysAbsent} />
           </div>
 
           <div className="mb-6">
-            <ExcuseDocumentation
-              submissions={excuseSubmissions}
-              onSubmit={handleSubmitExcuse} />
-
+            <SubjectAttendanceDetails 
+              subjects={subjects}
+              selectedSubject={selectedSubject}
+              onSelectSubject={setSelectedSubject}
+            />
           </div>
         </div>
       </main>

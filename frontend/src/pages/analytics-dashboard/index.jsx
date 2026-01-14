@@ -2,244 +2,104 @@ import React, { useState } from 'react';
 import { SidebarProvider, useSidebar } from '../../contexts/SidebarContext';
 import Sidebar from '../../components/Sidebar';
 import Icon from '../../components/AppIcon';
-import MetricCard from './components/MetricCard';
-import AttendanceChart from './components/AttendanceChart';
-import AtRiskStudents from './components/AtRiskStudents';
-import ClassPerformance from './components/ClassPerformance';
-import DateRangeSelector from './components/DateRangeSelector';
-import ExportReports from './components/ExportReports';
-import TrendAnalysis from './components/TrendAnalysis';
-import ScheduledReports from './components/ScheduledReports';
+import { useData } from '../../contexts/DataContext';
 
 const AnalyticsDashboardContent = () => {
   const { isCollapsed, toggleCollapse } = useSidebar();
-  const [selectedView, setSelectedView] = useState('overview');
+  const { students, subjects } = useData();
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedFilter, setSelectedFilter] = useState('all');
 
-  const metricsData = [
-  {
-    title: "Overall Attendance Rate",
-    value: "94.2%",
-    change: "+2.3%",
-    changeType: "positive",
-    icon: "Users",
-    iconColor: "bg-gradient-to-br from-primary to-secondary",
-    trend: true
-  },
-  {
-    title: "At-Risk Students",
-    value: "23",
-    change: "-5",
-    changeType: "positive",
-    icon: "AlertTriangle",
-    iconColor: "bg-gradient-to-br from-warning to-error",
-    trend: true
-  },
-  {
-    title: "Average Class Size",
-    value: "28.5",
-    change: "+1.2",
-    changeType: "neutral",
-    icon: "GraduationCap",
-    iconColor: "bg-gradient-to-br from-secondary to-primary",
-    trend: true
-  },
-  {
-    title: "Chronic Absenteeism",
-    value: "4.8%",
-    change: "-1.2%",
-    changeType: "positive",
-    icon: "TrendingDown",
-    iconColor: "bg-gradient-to-br from-success to-secondary",
-    trend: true
-  }];
-
-
-  const weeklyAttendanceData = [
-  { name: 'Mon', attendance: 95, target: 95 },
-  { name: 'Tue', attendance: 93, target: 95 },
-  { name: 'Wed', attendance: 96, target: 95 },
-  { name: 'Thu', attendance: 94, target: 95 },
-  { name: 'Fri', attendance: 92, target: 95 }];
-
-
-  const monthlyAttendanceData = [
-  { name: 'Week 1', attendance: 94, target: 95 },
-  { name: 'Week 2', attendance: 95, target: 95 },
-  { name: 'Week 3', attendance: 93, target: 95 },
-  { name: 'Week 4', attendance: 96, target: 95 }];
-
-
-  const atRiskStudentsData = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    studentId: "STU2023001",
-    class: "Grade 10-A",
-    attendanceRate: 72,
-    riskLevel: "high",
-    avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_10f2a5121-1763301808135.png",
-    avatarAlt: "Professional headshot of young woman with long brown hair wearing blue school uniform"
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    studentId: "STU2023045",
-    class: "Grade 11-B",
-    attendanceRate: 81,
-    riskLevel: "medium",
-    avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_1503498df-1763291727218.png",
-    avatarAlt: "Professional headshot of Asian male student with short black hair in white shirt"
-  },
-  {
-    id: 3,
-    name: "Emily Rodriguez",
-    studentId: "STU2023089",
-    class: "Grade 9-C",
-    attendanceRate: 68,
-    riskLevel: "high",
-    avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_1a36548bd-1763296665300.png",
-    avatarAlt: "Professional headshot of Hispanic female student with curly dark hair wearing red sweater"
-  },
-  {
-    id: 4,
-    name: "David Thompson",
-    studentId: "STU2023112",
-    class: "Grade 12-A",
-    attendanceRate: 85,
-    riskLevel: "medium",
-    avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_16e75c406-1763294340369.png",
-    avatarAlt: "Professional headshot of Caucasian male student with blonde hair in navy blazer"
-  },
-  {
-    id: 5,
-    name: "Aisha Patel",
-    studentId: "STU2023156",
-    class: "Grade 10-B",
-    attendanceRate: 75,
-    riskLevel: "high",
-    avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_18e23b0ba-1763300956208.png",
-    avatarAlt: "Professional headshot of Indian female student with long black hair wearing green traditional dress"
-  }];
-
-
-  const classPerformanceData = [
-  {
-    id: 1,
-    name: "Mathematics - Grade 10",
-    teacher: "Prof. Anderson",
-    students: 32,
-    attendanceRate: 96,
-    trend: "+3% this month"
-  },
-  {
-    id: 2,
-    name: "English Literature - Grade 11",
-    teacher: "Dr. Williams",
-    students: 28,
-    attendanceRate: 89,
-    trend: "-2% this month"
-  },
-  {
-    id: 3,
-    name: "Physics - Grade 12",
-    teacher: "Prof. Martinez",
-    students: 25,
-    attendanceRate: 94,
-    trend: "+1% this month"
-  },
-  {
-    id: 4,
-    name: "History - Grade 9",
-    teacher: "Ms. Taylor",
-    students: 30,
-    attendanceRate: 92,
-    trend: "Stable"
-  },
-  {
-    id: 5,
-    name: "Chemistry - Grade 11",
-    teacher: "Dr. Brown",
-    students: 27,
-    attendanceRate: 87,
-    trend: "-4% this month"
-  }];
-
-
-  const trendAnalysisData = [
-  {
-    id: 1,
-    title: "Monday Morning Attendance",
-    description: "Consistent improvement in Monday morning attendance rates across all grades",
-    period: "Last 8 weeks",
-    change: "+5.2%",
-    type: "improving"
-  },
-  {
-    id: 2,
-    title: "Post-Holiday Attendance",
-    description: "Decline in attendance rates following extended holiday breaks",
-    period: "Last 3 quarters",
-    change: "-3.8%",
-    type: "declining"
-  },
-  {
-    id: 3,
-    title: "Senior Class Engagement",
-    description: "Grade 12 students maintaining stable attendance throughout semester",
-    period: "Current semester",
-    change: "±0.5%",
-    type: "stable"
-  },
-  {
-    id: 4,
-    title: "Weather Impact Analysis",
-    description: "Significant correlation between severe weather and attendance drops",
-    period: "Winter months",
-    change: "-7.2%",
-    type: "declining"
-  }];
-
-
-  const scheduledReportsData = [
-  {
-    id: 1,
-    name: "Daily Attendance Summary",
-    frequency: "daily",
-    nextRun: "Tomorrow 8:00 AM",
-    status: "active"
-  },
-  {
-    id: 2,
-    name: "Weekly Performance Report",
-    frequency: "weekly",
-    nextRun: "Monday 9:00 AM",
-    status: "active"
-  },
-  {
-    id: 3,
-    name: "Monthly Compliance Report",
-    frequency: "monthly",
-    nextRun: "Dec 1, 2025",
-    status: "active"
-  },
-  {
-    id: 4,
-    name: "Quarterly Analytics Review",
-    frequency: "monthly",
-    nextRun: "Jan 1, 2026",
-    status: "paused"
-  }];
-
-
-  const handleDateRangeChange = (range) => {
-    console.log('Date range changed to:', range);
+  // Generate dynamic student attendance data from admin students
+  const generateAttendanceData = () => {
+    const totalClasses = 30;
+    return students.map((student, index) => {
+      const attended = Math.floor(Math.random() * (totalClasses - 15) + 15);
+      const absent = totalClasses - attended;
+      const percentage = parseFloat(((attended / totalClasses) * 100).toFixed(1));
+      
+      let status = 'Excellent';
+      if (percentage < 75) status = 'Low';
+      else if (percentage < 85) status = 'Ok';
+      else if (percentage < 90) status = 'Good';
+      
+      return {
+        id: `STU${String(index + 1).padStart(3, '0')}`,
+        name: student.name,
+        roll: student.roll,
+        totalClasses,
+        attended,
+        absent,
+        percentage,
+        status
+      };
+    });
   };
 
-  const views = [
-  { id: 'overview', label: 'Overview', icon: 'LayoutDashboard' },
-  { id: 'trends', label: 'Trends', icon: 'TrendingUp' },
-  { id: 'reports', label: 'Reports', icon: 'FileText' },
-  { id: 'predictions', label: 'Predictions', icon: 'Brain' }];
+  const studentAttendanceData = generateAttendanceData();
+
+  // Create classes from subjects
+  const classes = subjects.map((subject, index) => ({
+    id: `class-${index}`,
+    name: subject.name,
+    subjectCode: subject.code,
+    academicDays: subject.academicDays || 200
+  }));
+
+  // Set default class on mount
+  React.useEffect(() => {
+    if (classes.length > 0 && !selectedClass) {
+      setSelectedClass(classes[0].id);
+    }
+  }, [classes, selectedClass]);
+
+  const filters = [
+    { id: 'all', label: 'All Students' },
+    { id: 'high', label: 'High (85%+)' },
+    { id: 'medium', label: 'Medium (75-84%)' },
+    { id: 'low', label: 'Low (<75%)' }
+  ];
+
+  const filteredStudents = studentAttendanceData.filter(student => {
+    if (selectedFilter === 'high') return student.percentage >= 85;
+    if (selectedFilter === 'medium') return student.percentage >= 75 && student.percentage < 85;
+    if (selectedFilter === 'low') return student.percentage < 75;
+    return true;
+  });
+
+  const totalStudents = students.length;
+  const totalClasses = 30;
+  const overallAttendance = Math.round(
+    studentAttendanceData.reduce((sum, s) => sum + s.percentage, 0) / studentAttendanceData.length
+  );
+  const avgStudentPercentage = parseFloat(
+    (studentAttendanceData.reduce((sum, s) => sum + s.percentage, 0) / studentAttendanceData.length).toFixed(1)
+  );
+
+  const handleExportCSV = () => {
+    const headers = ['Student ID', 'Name', 'Total Classes', 'Attended', 'Absent', 'Percentage', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredStudents.map(s => `${s.id},${s.name},${s.totalClasses},${s.attended},${s.absent},${s.percentage},${s.status}`)
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'attendance_report.csv';
+    a.click();
+  };
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'Excellent': return 'bg-green-100 text-green-700';
+      case 'Good': return 'bg-yellow-100 text-yellow-700';
+      case 'Ok': return 'bg-orange-100 text-orange-700';
+      case 'Low': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
 
 
   return (
@@ -247,196 +107,153 @@ const AnalyticsDashboardContent = () => {
       <Sidebar isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
       <main className={`main-content ${isCollapsed ? 'sidebar-collapsed' : ''} bg-background min-h-screen`}>
         <div className="p-6 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Analytics Dashboard</h1>
-              <p className="text-muted-foreground">
-                Transform attendance data into actionable educational intelligence
-              </p>
+          {/* Header */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Icon name="BarChart3" size={28} className="text-primary" />
+              <h1 className="text-3xl font-bold text-foreground">Attendance Analytics</h1>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card hover:bg-muted transition-colors duration-300">
-                <Icon name="RefreshCw" size={16} />
-                <span className="text-sm font-medium">Refresh</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-300">
-                <Icon name="Download" size={16} />
-                <span className="text-sm font-medium">Export</span>
-              </button>
-            </div>
+            <p className="text-muted-foreground">
+              Analyze class attendance and student performance
+            </p>
           </div>
 
-          <div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
-            {views?.map((view) =>
-            <button
-              key={view?.id}
-              onClick={() => setSelectedView(view?.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-              selectedView === view?.id ?
-              'bg-card text-foreground shadow-soft' :
-              'text-muted-foreground hover:text-foreground'}`
-              }>
-
-                <Icon name={view?.icon} size={16} />
-                <span className="text-sm font-medium">{view?.label}</span>
-              </button>
-            )}
-          </div>
-
-          <DateRangeSelector onRangeChange={handleDateRangeChange} />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {metricsData?.map((metric, index) =>
-            <MetricCard key={index} {...metric} />
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <AttendanceChart
-              data={weeklyAttendanceData}
-              type="line"
-              title="Weekly Attendance Trends"
-              height={300} />
-
-            <AttendanceChart
-              data={monthlyAttendanceData}
-              type="bar"
-              title="Monthly Performance"
-              height={300} />
-
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <AtRiskStudents students={atRiskStudentsData} />
-            </div>
-            <ClassPerformance classes={classPerformanceData} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TrendAnalysis trends={trendAnalysisData} />
-            <ScheduledReports reports={scheduledReportsData} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-card rounded-lg border border-border p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Icon name="Brain" size={20} className="text-primary" />
-                  <h3 className="text-lg font-semibold text-foreground">Predictive Insights</h3>
-                </div>
-                <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                  AI-Powered
-                </span>
-              </div>
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
-                  <div className="flex items-start gap-3">
-                    <Icon name="AlertTriangle" size={20} className="text-warning mt-1" />
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground mb-1">
-                        Increased Absenteeism Risk
-                      </h4>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Grade 11-B shows 15% higher probability of attendance decline in next 2 weeks based on historical patterns and current trends
-                      </p>
-                      <button className="text-xs text-warning hover:text-warning/80 font-medium">
-                        View Recommendations →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 rounded-lg bg-success/10 border border-success/20">
-                  <div className="flex items-start gap-3">
-                    <Icon name="CheckCircle2" size={20} className="text-success mt-1" />
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground mb-1">
-                        Positive Engagement Trend
-                      </h4>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Mathematics classes showing sustained improvement with 92% confidence of maintaining 95%+ attendance through semester end
-                      </p>
-                      <button className="text-xs text-success hover:text-success/80 font-medium">
-                        View Details →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                  <div className="flex items-start gap-3">
-                    <Icon name="Lightbulb" size={20} className="text-primary mt-1" />
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground mb-1">
-                        Intervention Opportunity
-                      </h4>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Early intervention for 8 students could prevent chronic absenteeism classification. Recommended actions available
-                      </p>
-                      <button className="text-xs text-primary hover:text-primary/80 font-medium">
-                        Create Action Plan →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <ExportReports />
-          </div>
-
+          {/* Class Selector */}
           <div className="bg-card rounded-lg border border-border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Icon name="MessageSquare" size={20} className="text-primary" />
-                <h3 className="text-lg font-semibold text-foreground">Collaborative Annotations</h3>
+            <label className="block text-sm font-medium text-foreground mb-3">Select Class</label>
+            <select
+              value={selectedClass || ''}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              className="w-1/2 px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {classes.map(cls => (
+                <option key={cls.id} value={cls.id}>{cls.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Metric Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-card rounded-lg border border-border p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Total Students</p>
+                  <p className="text-4xl font-bold text-foreground">{totalStudents}</p>
+                </div>
+                <Icon name="Users" size={24} className="text-blue-500" />
               </div>
-              <button className="text-sm text-primary hover:text-primary/80 transition-colors duration-300 flex items-center gap-1">
-                <Icon name="Plus" size={16} />
-                <span>Add Note</span>
+            </div>
+
+            <div className="bg-card rounded-lg border border-border p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Total Classes</p>
+                  <p className="text-4xl font-bold text-foreground">{totalClasses}</p>
+                </div>
+                <Icon name="TrendingUp" size={24} className="text-green-500" />
+              </div>
+            </div>
+
+            <div className="bg-card rounded-lg border border-border p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Overall Attendance %</p>
+                  <p className="text-4xl font-bold text-green-600">{overallAttendance}%</p>
+                </div>
+                <Icon name="BarChart2" size={24} className="text-green-500" />
+              </div>
+            </div>
+
+            <div className="bg-card rounded-lg border border-border p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Avg Student %</p>
+                  <p className="text-4xl font-bold text-purple-600">{avgStudentPercentage}%</p>
+                </div>
+                <Icon name="Users" size={24} className="text-purple-500" />
+              </div>
+            </div>
+          </div>
+
+          {/* Student Attendance Details */}
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
+            <div className="p-6 border-b border-border flex items-center justify-between">
+              <h3 className="text-lg font-bold text-foreground">Student Attendance Details</h3>
+              <button
+                onClick={handleExportCSV}
+                className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm"
+              >
+                <Icon name="Download" size={16} />
+                Export CSV
               </button>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-                  JD
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-foreground">Dr. Jane Davis</span>
-                    <span className="text-xs text-muted-foreground">2 hours ago</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Notable improvement in Grade 10 attendance after implementing morning mentorship program. Consider expanding to other grades.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground text-xs font-bold">
-                  MS
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-foreground">Michael Smith</span>
-                    <span className="text-xs text-muted-foreground">Yesterday</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Weather-related absences spiking. Recommend proactive communication with parents about remote learning options during severe weather.
-                  </p>
-                </div>
-              </div>
+
+            {/* Filter Buttons */}
+            <div className="p-6 border-b border-border flex items-center gap-3 flex-wrap">
+              {filters.map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => setSelectedFilter(filter.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    selectedFilter === filter.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-muted text-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase">Student ID</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase">Name</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase">Total Classes</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase">Attended</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase">Absent</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase">Percentage</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredStudents.map((student) => (
+                    <tr key={student.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-6 py-4 text-sm text-foreground">{student.id}</td>
+                      <td className="px-6 py-4 text-sm text-foreground">{student.name}</td>
+                      <td className="px-6 py-4 text-sm text-foreground">{student.totalClasses}</td>
+                      <td className="px-6 py-4 text-sm text-green-600 font-medium">{student.attended}</td>
+                      <td className="px-6 py-4 text-sm text-red-600 font-medium">{student.absent}</td>
+                      <td className="px-6 py-4 text-sm text-foreground">{student.percentage}%</td>
+                      <td className="px-6 py-4">
+                        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusColor(student.status)}`}>
+                          {student.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="px-6 py-4 text-xs text-muted-foreground border-t border-border">
+              Showing {filteredStudents.length} of {studentAttendanceData.length} students.
             </div>
           </div>
         </div>
       </main>
-    </>);
-
+    </>
+  );
 };
 
 const AnalyticsDashboard = () => {
   return (
     <SidebarProvider>
       <AnalyticsDashboardContent />
-    </SidebarProvider>);
-
+    </SidebarProvider>
+  );
 };
 
 export default AnalyticsDashboard;

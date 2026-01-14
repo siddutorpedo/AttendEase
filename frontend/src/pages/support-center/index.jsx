@@ -17,7 +17,7 @@ import QuickActionCard from './components/QuickActionCard';
 const SupportCenterContent = () => {
   const { isCollapsed, toggleCollapse } = useSidebar();
   const [activeTab, setActiveTab] = useState('knowledge-base');
-  const [_searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const categories = [
   {
