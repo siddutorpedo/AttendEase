@@ -75,7 +75,7 @@ const StudentCard = ({ student, onMarkAttendance, isSelected }) => {
           </div>
 
           {student?.lastMarkedTime && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mb-3">
               <Icon name="Clock" size={12} />
               Marked at {student?.lastMarkedTime}
             </p>

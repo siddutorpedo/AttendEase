@@ -6,31 +6,35 @@ import { useData } from '../../contexts/DataContext';
 
 const AnalyticsDashboardContent = () => {
   const { isCollapsed, toggleCollapse } = useSidebar();
-  const { students, subjects } = useData();
+  const { students, subjects, getAttendanceStats, settings } = useData();
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [dateRange, setDateRange] = useState({
+    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    to: new Date().toISOString().split('T')[0]
+  });
 
-  // Generate dynamic student attendance data from admin students
+  // Generate dynamic student attendance data from real attendance records
   const generateAttendanceData = () => {
-    const totalClasses = 30;
+    const selectedSubject = subjects.find(s => s.id === selectedClass);
+    if (!selectedSubject) return [];
+
     return students.map((student, index) => {
-      const attended = Math.floor(Math.random() * (totalClasses - 15) + 15);
-      const absent = totalClasses - attended;
-      const percentage = parseFloat(((attended / totalClasses) * 100).toFixed(1));
+      const stats = getAttendanceStats(student.id, selectedClass, dateRange.from, dateRange.to);
       
       let status = 'Excellent';
-      if (percentage < 75) status = 'Low';
-      else if (percentage < 85) status = 'Ok';
-      else if (percentage < 90) status = 'Good';
+      if (stats.percentage < 75) status = 'Low';
+      else if (stats.percentage < 85) status = 'Ok';
+      else if (stats.percentage < 90) status = 'Good';
       
       return {
         id: `STU${String(index + 1).padStart(3, '0')}`,
         name: student.name,
         roll: student.roll,
-        totalClasses,
-        attended,
-        absent,
-        percentage,
+        totalClasses: stats.totalClasses,
+        attended: stats.presentCount,
+        absent: stats.absentCount,
+        percentage: parseFloat(stats.percentage),
         status
       };
     });
@@ -39,8 +43,8 @@ const AnalyticsDashboardContent = () => {
   const studentAttendanceData = generateAttendanceData();
 
   // Create classes from subjects
-  const classes = subjects.map((subject, index) => ({
-    id: `class-${index}`,
+  const classes = subjects.map((subject) => ({
+    id: subject.id,
     name: subject.name,
     subjectCode: subject.code,
     academicDays: subject.academicDays || 200
@@ -118,18 +122,40 @@ const AnalyticsDashboardContent = () => {
             </p>
           </div>
 
-          {/* Class Selector */}
-          <div className="bg-card rounded-lg border border-border p-6">
-            <label className="block text-sm font-medium text-foreground mb-3">Select Class</label>
-            <select
-              value={selectedClass || ''}
-              onChange={(e) => setSelectedClass(e.target.value)}
-              className="w-1/2 px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {classes.map(cls => (
-                <option key={cls.id} value={cls.id}>{cls.name}</option>
-              ))}
-            </select>
+          {/* Class Selector and Date Range */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-card rounded-lg border border-border p-4">
+              <label className="block text-sm font-medium text-foreground mb-2">Select Class</label>
+              <select
+                value={selectedClass || ''}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              >
+                {classes.map(cls => (
+                  <option key={cls.id} value={cls.id}>{cls.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="bg-card rounded-lg border border-border p-4">
+              <label className="block text-sm font-medium text-foreground mb-2">From Date</label>
+              <input
+                type="date"
+                value={dateRange.from}
+                onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              />
+            </div>
+
+            <div className="bg-card rounded-lg border border-border p-4">
+              <label className="block text-sm font-medium text-foreground mb-2">To Date</label>
+              <input
+                type="date"
+                value={dateRange.to}
+                onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              />
+            </div>
           </div>
 
           {/* Metric Cards */}

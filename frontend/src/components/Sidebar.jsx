@@ -85,13 +85,13 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse }) => {
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <div className="sidebar-logo-icon">
-              <Icon name="GraduationCap" size={24} color="#FFFFFF" />
+              <Icon name="GraduationCap" size={24} />
             </div>
             <span className="sidebar-logo-text">AttendEase</span>
           </div>
           <button
             onClick={onToggleCollapse}
-            className="hidden lg:block p-2 rounded-lg hover:bg-muted transition-colors duration-300"
+            className="hidden lg:block p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors duration-300"
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <Icon

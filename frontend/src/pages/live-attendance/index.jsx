@@ -15,7 +15,7 @@ import { useData } from '../../contexts/DataContext';
 
 const LiveAttendanceContent = () => {
   const { isCollapsed, toggleCollapse } = useSidebar();
-  const { students: adminStudents, subjects: adminSubjects } = useData();
+  const { students: adminStudents, subjects: adminSubjects, markAttendance, getAttendanceByDateAndSubject } = useData();
 
   // Convert admin students to attendance format
   const getStudentsWithAttendance = () => {
@@ -34,28 +34,29 @@ const LiveAttendanceContent = () => {
       const color = colors[index % colors.length];
       
       return {
-        id: `st${String(index + 1).padStart(3, '0')}`,
+        id: student.id,
         name: student.name,
         rollNumber: student.roll,
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=${color}&color=fff&size=128&bold=true&font-size=0.4`,
         avatarAlt: `Avatar of ${student.name}`,
-        status: 'present',
-        lastMarkedTime: '9:05 AM',
-        attendanceRate: Math.floor(Math.random() * (95 - 65 + 1)) + 65,
+        status: 'unmarked',
+        lastMarkedTime: null,
+        attendanceRate: 0,
         hasAttendanceConcern: false
       };
     });
   };
 
-  const mockClasses = adminSubjects.map((subject, index) => ({
-    id: subject.code.toLowerCase(),
+  const mockClasses = adminSubjects.map((subject) => ({
+    id: subject.id,
     name: subject.code,
     subject: subject.name,
     studentCount: adminStudents.length,
     schedule: 'Mon, Wed, Fri 9:00 AM'
   }));
 
-  const [selectedClass, setSelectedClass] = useState(mockClasses[0]?.id || 'cs101');
+  const [selectedClass, setSelectedClass] = useState(mockClasses[0]?.id || 1);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [studentsAttendance, setStudentsAttendance] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -67,22 +68,39 @@ const LiveAttendanceContent = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
 
-  // Initialize attendance records for each class
+  // Load attendance records for selected date and class
   useEffect(() => {
-    const initialAttendance = {};
-    mockClasses.forEach((classItem) => {
-      if (!initialAttendance[classItem.id]) {
-        initialAttendance[classItem.id] = getStudentsWithAttendance();
+    const attendanceRecords = getAttendanceByDateAndSubject(selectedClass, selectedDate);
+    const students = getStudentsWithAttendance();
+    
+    // Update student statuses based on attendance records
+    const updatedStudents = students.map(student => {
+      const record = attendanceRecords.find(r => r.studentId === student.id);
+      if (record) {
+        return {
+          ...student,
+          status: record.status,
+          lastMarkedTime: new Date(record.markedAt).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          })
+        };
       }
+      return student;
     });
-    setStudentsAttendance(initialAttendance);
-  }, [mockClasses.length]);
+
+    setStudentsAttendance(prev => ({
+      ...prev,
+      [selectedClass]: updatedStudents
+    }));
+  }, [selectedDate, selectedClass]);
 
   // Get students for the current selected class
   const students = studentsAttendance[selectedClass] || getStudentsWithAttendance();
 
   const sessionInfo = {
-    date: new Date().toLocaleDateString('en-US', {
+    date: new Date(selectedDate).toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -105,25 +123,30 @@ const LiveAttendanceContent = () => {
   }, []);
 
   const handleMarkAttendance = (studentId, status = null) => {
+    const currentTime = new Date().toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    // Determine the status
+    let newStatus = status;
+    if (!status) {
+      const currentStudentStatus = students.find(s => s.id === studentId)?.status;
+      newStatus = currentStudentStatus === 'present' ? 'absent' : 'present';
+    }
+
+    // Mark attendance in central data structure
+    markAttendance(studentId, selectedClass, selectedDate, newStatus);
+
+    // Update local UI state
     setStudentsAttendance((prev) => {
       const classStudents = prev[selectedClass] || [];
       const newStudents = classStudents.map((student) => {
         if (student.id === studentId) {
-          const currentTime = new Date().toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-          });
-
-          let newStatus = status;
-          if (!status) {
-            // Toggle between present and absent
-            newStatus = student.status === 'present' ? 'absent' : 'present';
-          }
-
           setUndoStack((stack) => [
             ...stack,
-            { studentId, previousStatus: student.status, classId: selectedClass }
+            { studentId, previousStatus: student.status, classId: selectedClass, date: selectedDate }
           ]);
 
           return {
@@ -156,7 +179,8 @@ const LiveAttendanceContent = () => {
       const undoData = classStudents.map((s) => ({
         studentId: s.id,
         previousStatus: s.status,
-        classId: selectedClass
+        classId: selectedClass,
+        date: selectedDate
       }));
       setUndoStack((stack) => [...stack, ...undoData]);
 
@@ -168,6 +192,11 @@ const LiveAttendanceContent = () => {
           lastMarkedTime: currentTime
         }))
       };
+    });
+
+    // Mark all students in central data
+    students.forEach(student => {
+      markAttendance(student.id, selectedClass, selectedDate, status);
     });
 
     playSuccessSound();
@@ -222,6 +251,11 @@ const LiveAttendanceContent = () => {
       };
     });
 
+    // Mark attendance in central data for all selected students
+    selectedStudents.forEach(studentId => {
+      markAttendance(studentId, selectedClass, selectedDate, action);
+    });
+
     setSelectedStudents([]);
     playSuccessSound();
     showSuccessToast(`Bulk action applied to ${selectedStudents.length} students`);
@@ -237,6 +271,14 @@ const LiveAttendanceContent = () => {
   const showSuccessToast = (message) => {
     setToastMessage(message);
     setShowToast(true);
+  };
+
+  const toggleStudentSelection = (studentId) => {
+    setSelectedStudents(prev =>
+      prev.includes(studentId)
+        ? prev.filter(id => id !== studentId)
+        : [...prev, studentId]
+    );
   };
 
   const filteredStudents = students.filter((student) => {
@@ -280,6 +322,27 @@ const LiveAttendanceContent = () => {
             <p className="text-muted-foreground">
               Mark and manage student attendance in real-time
             </p>
+          </div>
+
+          {/* Session Info and Date Picker */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-card rounded-lg border border-border p-4">
+              <p className="text-xs text-muted-foreground mb-1">Date</p>
+              <p className="text-lg font-semibold text-foreground">{sessionInfo.date}</p>
+            </div>
+            <div className="bg-card rounded-lg border border-border p-4">
+              <p className="text-xs text-muted-foreground mb-1">Select Date</p>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              />
+            </div>
+            <div className="bg-card rounded-lg border border-border p-4">
+              <p className="text-xs text-muted-foreground mb-1">Session</p>
+              <p className="text-sm font-medium text-foreground">{sessionInfo.session}</p>
+            </div>
           </div>
 
           <ClassSelector
@@ -334,6 +397,7 @@ const LiveAttendanceContent = () => {
                 key={student.id}
                 student={student}
                 onMarkAttendance={handleMarkAttendance}
+                onToggleSelection={toggleStudentSelection}
                 isSelected={selectedStudents.includes(student.id)} />
 
               )}
