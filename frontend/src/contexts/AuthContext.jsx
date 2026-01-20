@@ -1,43 +1,43 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null); // 🔥 NEW
   const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('attendeaseUser');
+    const savedUser = localStorage.getItem("attendeaseUser");
     if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Failed to load user from storage:', error);
-      }
+      const userData = JSON.parse(savedUser);
+      setUser(userData);
+      setRole(userData.type); // 🔥 NEW
+      setIsAuthenticated(true);
     }
     setLoading(false);
   }, []);
 
   const login = (userData) => {
     setUser(userData);
+    setRole(userData.type); // 🔥 NEW
     setIsAuthenticated(true);
-    localStorage.setItem('attendeaseUser', JSON.stringify(userData));
+    localStorage.setItem("attendeaseUser", JSON.stringify(userData));
   };
 
   const register = (userData) => {
     setUser(userData);
+    setRole("student"); // 🔥 Registration = student only
     setIsAuthenticated(true);
-    localStorage.setItem('attendeaseUser', JSON.stringify(userData));
+    localStorage.setItem("attendeaseUser", JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
+    setRole(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('attendeaseUser');
+    localStorage.removeItem("attendeaseUser");
   };
 
   return (
@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         isAuthenticated,
         user,
+        role,
         loading,
         login,
         register,
@@ -56,10 +57,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);

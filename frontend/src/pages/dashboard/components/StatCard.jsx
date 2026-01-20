@@ -30,6 +30,7 @@ const StatCard = ({ icon, title, value, change, changeType, subtitle }) => {
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
     </div>
+    
   );
 };
 

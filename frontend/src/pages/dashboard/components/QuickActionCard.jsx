@@ -24,6 +24,7 @@ const QuickActionCard = ({ icon, title, description, onClick, variant = 'default
         </div>
         <Icon name="ChevronRight" size={20} className="text-muted-foreground mt-1" />
       </div>
+      
     </button>
   );
 };
