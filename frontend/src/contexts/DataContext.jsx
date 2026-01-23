@@ -6,6 +6,7 @@ export const DataProvider = ({ children }) => {
   // Core data
   const [students, setStudents] = useState([]);
   const [subjects, setSubjects] = useState([]);
+
   const [attendance, setAttendance] = useState([]);
 
   // ───────────────── ATTENDANCE ─────────────────
