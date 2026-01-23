@@ -11,7 +11,7 @@ const ManageStudents = () => {
 
   const [formData, setFormData] = useState({
     name: "",
-    roll: "",
+    rollNo: "",
     email: "",
     branch: "BCA",
   });
@@ -41,22 +41,27 @@ const ManageStudents = () => {
 
   /* ADD STUDENT (SAVE TO MONGODB) */
   const handleSave = async () => {
-    if (!formData.name || !formData.roll || !formData.email) {
+    if (!formData.name || !formData.rollNo || !formData.email) {
       alert("Please fill all fields");
       return;
     }
 
     try {
-      const res = await fetch(API, {
-        method: "POST",
+      const method = editingId ? "PUT" : "POST";
+      const url = editingId ? `${API}/${editingId}` : API;
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       const savedStudent = await res.json();
 
-      // ✅ Update UI after DB save
-      setStudents((prev) => [...prev, savedStudent]);
+      if (editingId) {
+        setStudents((prev) => prev.map(s => s._id === editingId ? savedStudent : s));
+      } else {
+        setStudents((prev) => [...prev, savedStudent]);
+      }
 
       handleCloseModal();
     } catch (err) {
@@ -84,10 +89,17 @@ const ManageStudents = () => {
     setEditingId(null);
     setFormData({
       name: "",
-      roll: "",
+      rollNo: "",
       email: "",
       branch: "BCA",
     });
+  };
+
+  const handleEdit = (id) => {
+    const student = students.find(s => s._id === id);
+    setFormData(student);
+    setEditingId(id);
+    setShowModal(true);
   };
 
   return (
@@ -106,8 +118,68 @@ const ManageStudents = () => {
       </button>
     </div>
 
-    {/* STUDENT LIST (whatever you already had) */}
-    {/* DO NOT CHANGE YOUR DESIGN HERE */}
+    <div className="space-y-4">
+      {students.map((student) => (
+        <div key={student._id} className="flex justify-between items-center p-4 border rounded">
+          <div>
+            <p><strong>Name:</strong> {student.name}</p>
+            <p><strong>Roll:</strong> {student.rollNo}</p>
+            <p><strong>Email:</strong> {student.email}</p>
+            <p><strong>Branch:</strong> {student.branch}</p>
+          </div>
+          <div className="space-x-2">
+            <button onClick={() => handleEdit(student._id)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
+            <button onClick={() => handleDelete(student._id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {showModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div className="bg-white p-6 rounded shadow-lg w-96">
+          <h3 className="text-lg font-semibold mb-4">{editingId ? "Edit Student" : "Add Student"}</h3>
+          <input
+            type="text"
+            name="name"
+            placeholder="Student Name"
+            value={formData.name}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded mb-2"
+          />
+          <input
+            type="text"
+            name="rollNo"
+            placeholder="Roll Number"
+            value={formData.rollNo}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded mb-2"
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded mb-2"
+          />
+          <select
+            name="branch"
+            value={formData.branch}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded mb-4"
+          >
+            {branchOptions.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <div className="flex justify-end space-x-2">
+            <button onClick={handleCloseModal} className="px-4 py-2 bg-gray-500 text-white rounded">Cancel</button>
+            <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded">Save</button>
+          </div>
+        </div>
+      </div>
+    )}
 
   </div>
 );
