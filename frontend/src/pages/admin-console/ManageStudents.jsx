@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-//import Icon from "../../components/AppIcon";
+import Icon from "../../components/AppIcon";
 import { useData } from "../../contexts/DataContext";
 
 const API = "http://localhost:5000/api/students";
@@ -121,15 +121,14 @@ const ManageStudents = () => {
     <div className="space-y-4">
       {students.map((student) => (
         <div key={student._id} className="flex justify-between items-center p-4 border rounded">
-          <div>
-            <p><strong>Name:</strong> {student.name}</p>
-            <p><strong>Roll:</strong> {student.rollNo}</p>
-            <p><strong>Email:</strong> {student.email}</p>
-            <p><strong>Branch:</strong> {student.branch}</p>
-          </div>
-          <div className="space-x-2">
-            <button onClick={() => handleEdit(student._id)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
-            <button onClick={() => handleDelete(student._id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+          <p className="font-medium">{student.name}</p>
+          <div className="flex space-x-2">
+            <button onClick={() => handleEdit(student._id)} className="p-2 text-blue-500 hover:bg-blue-100 rounded">
+              <Icon name="Edit" size={16} />
+            </button>
+            <button onClick={() => handleDelete(student._id)} className="p-2 text-red-500 hover:bg-red-100 rounded">
+              <Icon name="Trash2" size={16} />
+            </button>
           </div>
         </div>
       ))}
