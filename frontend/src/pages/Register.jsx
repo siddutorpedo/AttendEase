@@ -10,6 +10,7 @@ const Register = () => {
     fullName: "",
     email: "",
     rollNo: "",
+    branch: "",
     password: "",
     confirmPassword: "",
     agree: false
@@ -32,6 +33,7 @@ const Register = () => {
       !form.fullName ||
       !form.email ||
       !form.rollNo ||
+      !form.branch ||
       !form.password ||
       !form.confirmPassword
     ) {
@@ -58,6 +60,7 @@ const Register = () => {
           name: form.fullName,
           email: form.email,
           rollNo: form.rollNo,
+          branch: form.branch.trim(),
           password: form.password
         })
       });
@@ -84,10 +87,39 @@ const Register = () => {
         </h1>
 
         <form onSubmit={handleRegister} className="space-y-4">
-          <Input name="fullName" placeholder="Full Name" onChange={handleChange} />
-          <Input name="email" type="email" placeholder="Email" onChange={handleChange} />
-          <Input name="rollNo" placeholder="Roll Number" onChange={handleChange} />
-          <Input name="password" type="password" placeholder="Password" onChange={handleChange} />
+          <Input
+            name="fullName"
+            placeholder="Full Name"
+            onChange={handleChange}
+          />
+
+          <Input
+            name="email"
+            type="email"
+            placeholder="Email"
+            onChange={handleChange}
+          />
+
+          <Input
+            name="rollNo"
+            placeholder="Roll Number"
+            onChange={handleChange}
+          />
+
+          {/* ✅ Branch as TEXT INPUT */}
+          <Input
+            name="branch"
+            placeholder="Branch (e.g. BCA, CSE, AI, MECH)"
+            onChange={handleChange}
+          />
+
+          <Input
+            name="password"
+            type="password"
+            placeholder="Password"
+            onChange={handleChange}
+          />
+
           <Input
             name="confirmPassword"
             type="password"

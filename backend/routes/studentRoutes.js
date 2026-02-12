@@ -1,31 +1,19 @@
 import express from "express";
-import Student from "../models/Student.js";
+import {
+  registerStudent,
+  loginStudent,
+  getAllStudents,
+  deleteStudent,
+} from "../controllers/studentController.js";
 
 const router = express.Router();
 
-/* GET all students */
-router.get("/", async (req, res) => {
-  const students = await Student.find();
-  res.json(students);
-});
+/* STUDENT */
+router.post("/register", registerStudent);
+router.post("/login", loginStudent);
 
-/* ADD student */
-router.post("/", async (req, res) => {
-  req.body.password = req.body.password || "default123";
-  const student = await Student.create(req.body);
-  res.status(201).json(student);
-});
-
-/* UPDATE student */
-router.put("/:id", async (req, res) => {
-  const student = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(student);
-});
-
-/* DELETE student */
-router.delete("/:id", async (req, res) => {
-  await Student.findByIdAndDelete(req.params.id);
-  res.json({ message: "Student deleted" });
-});
+/* ADMIN */
+router.get("/", getAllStudents);
+router.delete("/:id", deleteStudent)
 
 export default router;

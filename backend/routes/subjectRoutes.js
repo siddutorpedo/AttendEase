@@ -1,30 +1,27 @@
 import express from "express";
-import Subject from "../models/Subject.js";
+import {
+  createSubject,
+  getSubjects,
+  getSubjectsByClass,
+  updateSubject,
+  deleteSubject,
+} from "../controllers/subjectController.js";
 
 const router = express.Router();
 
-/* GET all subjects */
-router.get("/", async (req, res) => {
-  const subjects = await Subject.find();
-  res.json(subjects);
-});
+// List subjects (with optional filters)
+router.get("/", getSubjects);
 
-/* ADD subject */
-router.post("/", async (req, res) => {
-  const subject = await Subject.create(req.body);
-  res.status(201).json(subject);
-});
+// List subjects for a specific class
+router.get("/class/:classId", getSubjectsByClass);
 
-/* UPDATE subject */
-router.put("/:id", async (req, res) => {
-  const subject = await Subject.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(subject);
-});
+// Create subject
+router.post("/", createSubject);
 
-/* DELETE subject */
-router.delete("/:id", async (req, res) => {
-  await Subject.findByIdAndDelete(req.params.id);
-  res.json({ message: "Subject deleted" });
-});
+// Update subject
+router.put("/:id", updateSubject);
+
+// Delete subject
+router.delete("/:id", deleteSubject);
 
 export default router;

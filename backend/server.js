@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import studentRoutes from "./routes/studentRoutes.js";
 import subjectRoutes from "./routes/subjectRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
+import classRoutes from "./routes/classRoutes.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use("/api/students", studentRoutes);
 app.use("/api/subjects", subjectRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/classes", classRoutes);
 
 /* MongoDB connection */
 mongoose

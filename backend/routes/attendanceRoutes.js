@@ -1,24 +1,28 @@
 import express from "express";
+import authMiddleware from "../middleware/authMiddleware.js";
 import {
   markAttendance,
-  getAttendanceByStudent
+  getAttendanceByStudent,
+  getAllAttendance,
+  getAttendanceByClass,
+  getAttendanceBySubject,
 } from "../controllers/attendanceController.js";
-import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-/**
- * @route   POST /api/attendance/mark
- * @desc    Mark student attendance
- * @access  Protected (Lecturer)
- */
+// Global list (for dashboard/DataContext)
+router.get("/", authMiddleware, getAllAttendance);
+
+// Mark student attendance (batch supported)
 router.post("/mark", authMiddleware, markAttendance);
 
-/**
- * @route   GET /api/attendance/student/:studentId
- * @desc    Get attendance of a student
- * @access  Protected
- */
+// Get attendance of a student
 router.get("/student/:studentId", authMiddleware, getAttendanceByStudent);
 
-export default router; // ✅ THIS FIXES YOUR ERROR
+// Class-level attendance
+router.get("/class/:classId", getAttendanceByClass);
+
+// Subject-level attendance
+router.get("/subject/:subjectId", getAttendanceBySubject);
+
+export default router;

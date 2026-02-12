@@ -11,11 +11,14 @@ import { useData } from '../../contexts/DataContext';
 const StudentProfileContent = () => {
   const { isCollapsed, toggleCollapse } = useSidebar();
   const { user } = useAuth();
-  const { students } = useData();
-  const [selectedSubject, setSelectedSubject] = useState('mathematics');
+  const { students, attendance, subjects, getAttendanceByStudent } = useData();
+  const [selectedSubject, setSelectedSubject] = useState('');
 
-  // Get the logged-in student's data from admin list
-  const loggedInStudent = students.find(s => s.name.toLowerCase() === user?.name.toLowerCase());
+  const loggedInStudent = students.find(
+    (s) => String(s._id || s.id).toLowerCase() === String(user?.id || user?._id || '').toLowerCase()
+  ) || students.find(
+    (s) => s.name?.toLowerCase() === user?.name?.toLowerCase()
+  );
 
   const [studentData, setStudentData] = useState({
     name: user?.name || "Student",
@@ -25,9 +28,9 @@ const StudentProfileContent = () => {
     enrollmentDate: "August 15, 2023",
     profileImage: "https://ui-avatars.com/api/?name=" + encodeURIComponent(user?.name || "Student") + "&background=45B7D1&color=fff&size=256&bold=true&font-size=0.4",
     profileImageAlt: `Profile photo of ${user?.name}`,
-    attendanceRate: 92.5,
-    daysPresent: 148,
-    daysAbsent: 12,
+    attendanceRate: 0,
+    daysPresent: 0,
+    daysAbsent: 0,
     lateArrivals: 5,
     email: loggedInStudent?.email || user?.email || "student@attendease.edu",
     phone: "+1 (555) 234-5678",
@@ -50,6 +53,28 @@ const StudentProfileContent = () => {
     }
   }, []);
 
+  // Recalculate attendance metrics when data changes
+  useEffect(() => {
+    if (!loggedInStudent) return;
+
+    const studentId = loggedInStudent._id || loggedInStudent.id;
+    const records = getAttendanceByStudent(studentId);
+
+    const total = records.length;
+    const present = records.filter((r) => r.status === 'present').length;
+    const absent = records.filter((r) => r.status === 'absent').length;
+
+    const rate = total === 0 ? 0 : Math.round((present / total) * 100);
+
+    setStudentData(prev => ({
+      ...prev,
+      attendanceRate: rate,
+      daysPresent: present,
+      daysAbsent: absent,
+      email: loggedInStudent?.email || prev.email,
+    }));
+  }, [loggedInStudent, attendance, getAttendanceByStudent]);
+
   const handleProfilePhotoUpdate = (imageData) => {
     // Save to localStorage
     localStorage.setItem('studentProfilePhoto', imageData);
@@ -61,77 +86,39 @@ const StudentProfileContent = () => {
     }));
   };
 
-  const attendanceRecords = [
-  {
-    subject: "Advanced Mathematics",
-    teacher: "Dr. James Wilson",
-    date: "December 10, 2025",
-    time: "09:00 AM",
-    status: "present",
-    note: null
-  },
-  {
-    subject: "English Literature",
-    teacher: "Ms. Sarah Thompson",
-    date: "December 9, 2025",
-    time: "10:30 AM",
-    status: "present",
-    note: null
-  },
-  {
-    subject: "Chemistry Lab",
-    teacher: "Prof. Michael Chen",
-    date: "December 8, 2025",
-    time: "02:00 PM",
-    status: "late",
-    note: "Arrived 15 minutes late due to previous class running over"
-  },
-  {
-    subject: "World History",
-    teacher: "Mr. David Martinez",
-    date: "December 7, 2025",
-    time: "11:00 AM",
-    status: "present",
-    note: null
-  },
-  {
-    subject: "Physical Education",
-    teacher: "Coach Jennifer Brown",
-    date: "December 6, 2025",
-    time: "01:00 PM",
-    status: "excused",
-    note: "Medical appointment - documentation provided"
-  },
-  {
-    subject: "Spanish Language",
-    teacher: "Señora Isabella Garcia",
-    date: "December 5, 2025",
-    time: "09:30 AM",
-    status: "present",
-    note: null
-  },
-  {
-    subject: "Biology",
-    teacher: "Dr. Robert Anderson",
-    date: "December 4, 2025",
-    time: "10:00 AM",
-    status: "absent",
-    note: "Illness - parent notification sent"
-  }];
+  const studentIdForRecords = loggedInStudent?._id || loggedInStudent?.id;
+  const attendanceRecords = studentIdForRecords ? getAttendanceByStudent(studentIdForRecords) : [];
 
-  const subjects = [
-    { id: 'mathematics', name: 'Mathematics', totalClasses: 30, classesAttended: 28, absences: 2 },
-    { id: 'physics', name: 'Physics', totalClasses: 28, classesAttended: 27, absences: 1 },
-    { id: 'chemistry', name: 'Chemistry', totalClasses: 29, classesAttended: 28, absences: 1 },
-    { id: 'english', name: 'English', totalClasses: 31, classesAttended: 29, absences: 2 }
-  ];
+  const subjectStatsMap = subjects.reduce((acc, sub) => {
+    acc[sub._id || sub.id] = {
+      id: sub._id || sub.id,
+      name: sub.name,
+      totalClasses: 0,
+      classesAttended: 0,
+      absences: 0,
+    };
+    return acc;
+  }, {});
 
-  const attendanceBySubjectData = [
-    { subject: 'Mathematics', attendance: 28, absent: 2 },
-    { subject: 'Physics', attendance: 27, absent: 1 },
-    { subject: 'Chemistry', attendance: 28, absent: 1 },
-    { subject: 'English', attendance: 29, absent: 2 }
-  ];
+  attendanceRecords.forEach((rec) => {
+    const key = rec.subject?._id || rec.subjectId || rec.subject;
+    if (!subjectStatsMap[key]) return;
+    subjectStatsMap[key].totalClasses += 1;
+    if (rec.status === 'present') {
+      subjectStatsMap[key].classesAttended += 1;
+    }
+    if (rec.status === 'absent') {
+      subjectStatsMap[key].absences += 1;
+    }
+  });
+
+  const subjectsForView = Object.values(subjectStatsMap);
+
+  const attendanceBySubjectData = subjectsForView.map((s) => ({
+    subject: s.name,
+    attendance: s.classesAttended,
+    absent: s.absences,
+  }));
 
   const handleEditProfile = () => {
     console.log("Edit profile clicked");

@@ -2,22 +2,27 @@ import mongoose from "mongoose";
 
 const subjectSchema = new mongoose.Schema(
   {
+    name: { type: String, required: true },
+
+    // Short subject code like CS101
     code: {
       type: String,
       required: true,
+      trim: true,
       unique: true,
-      uppercase: true,
     },
 
-    name: {
-      type: String,
-      required: true,
-    },
-
+    // Optional branch for easier filtering in UI
     branch: {
       type: String,
-      enum: ["BCA", "BCOM", "BA"],
-      required: true,
+      required: false,
+      trim: true,
+    },
+
+    classId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class",
+      required: false, // keep optional to avoid blocking simple setups
     },
   },
   { timestamps: true }
