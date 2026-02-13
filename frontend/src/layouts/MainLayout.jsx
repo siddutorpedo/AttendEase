@@ -1,12 +1,14 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import { SidebarProvider, useSidebar } from "../contexts/SidebarContext";
 
-export default function MainLayout() {
+function MainLayoutContent() {
+  const { isCollapsed, toggleCollapse } = useSidebar();
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Sidebar */}
-      <div className="w-[260px] flex-shrink-0 border-r bg-white">
-        <Sidebar />
+      <div className={`flex-shrink-0 border-r bg-white ${isCollapsed ? "w-[72px]" : "w-[260px]"}`}>
+        <Sidebar isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
       </div>
 
       {/* Main Content */}
@@ -14,5 +16,13 @@ export default function MainLayout() {
         <Outlet />
       </div>
     </div>
+  );
+}
+
+export default function MainLayout() {
+  return (
+    <SidebarProvider>
+      <MainLayoutContent />
+    </SidebarProvider>
   );
 }

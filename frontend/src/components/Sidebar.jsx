@@ -13,7 +13,7 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse }) => {
   const navigationItems = [
     { path: '/dashboard', label: 'Dashboard', icon: 'LayoutDashboard', allowedRoles: ['lecturer'] },
     { path: '/live-attendance', label: 'Live Attendance', icon: 'Users', allowedRoles: ['lecturer'] },
-    { path: '/analytics-dashboard', label: 'Analytics', icon: 'BarChart3', allowedRoles: ['lecturer'] },
+    { path: '/analytics', label: 'Analytics', icon: 'BarChart3', allowedRoles: ['lecturer'] },
     { path: '/student-profile', label: 'Student Profile', icon: 'UserCircle', allowedRoles: ['student'] },
     { path: '/admin-console', label: 'Admin Console', icon: 'Settings', allowedRoles: ['lecturer'] },
     { path: '/support-center', label: 'Support Center', icon: 'HelpCircle', allowedRoles: ['student', 'lecturer'] },

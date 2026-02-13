@@ -12,29 +12,32 @@ const ManageSubjects = () => {
   const [formData, setFormData] = useState({
     code: "",
     name: "",
-    branch: "BCA",
+    branch: "",
+    year: "",
   });
 
-  const branchOptions = ["BCA", "BCOM", "BA"];
+  const yearOptions = [1, 2, 3, 4, 5];
 
   // ✅ LOAD FROM DB
   useEffect(() => {
     fetch(API)
       .then((res) => res.json())
-      .then((data) => setSubjects(data));
+      .then((data) =>
+        setSubjects((data || []).map((s) => ({ ...s, id: s._id || s.id })))
+      );
   }, [setSubjects]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this subject?")) return;
 
     await fetch(`${API}/${id}`, { method: "DELETE" });
-    setSubjects((prev) => prev.filter((s) => s._id !== id));
+    setSubjects((prev) => prev.filter((s) => s._id !== id && s.id !== id));
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingId(null);
-    setFormData({ code: "", name: "", branch: "BCA" });
+    setFormData({ code: "", name: "", branch: "", year: "" });
   };
 
   const handleInputChange = (e) => {
@@ -43,8 +46,13 @@ const ManageSubjects = () => {
   };
 
   const handleEdit = (id) => {
-    const subject = subjects.find(s => s._id === id);
-    setFormData(subject);
+    const subject = subjects.find((s) => s._id === id || s.id === id);
+    setFormData({
+      code: subject.code || "",
+      name: subject.name || "",
+      branch: subject.branch || "",
+      year: subject.year != null ? String(subject.year) : "",
+    });
     setEditingId(id);
     setShowModal(true);
   };
@@ -58,17 +66,27 @@ const ManageSubjects = () => {
     const method = editingId ? "PUT" : "POST";
     const url = editingId ? `${API}/${editingId}` : API;
 
+    const payload = {
+      ...formData,
+      year: formData.year ? Number(formData.year) : undefined,
+    };
+
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      body: JSON.stringify(payload),
     });
 
     const saved = await res.json();
+    const normalized = { ...saved, id: saved._id || saved.id };
     if (editingId) {
-      setSubjects((prev) => prev.map(s => s._id === editingId ? saved : s));
+      setSubjects((prev) =>
+        prev.map((s) =>
+          (s._id === editingId || s.id === editingId) ? normalized : s
+        )
+      );
     } else {
-      setSubjects((prev) => [...prev, saved]);
+      setSubjects((prev) => [...prev, normalized]);
     }
     handleCloseModal();
   };
@@ -87,8 +105,17 @@ const ManageSubjects = () => {
 
       <div className="space-y-4">
         {subjects.map((subject) => (
-          <div key={subject._id} className="flex justify-between items-center p-4 border rounded">
-            <p className="font-medium">{subject.name}</p>
+          <div key={subject._id || subject.id} className="flex justify-between items-center p-4 border rounded">
+            <div>
+              <p className="font-medium">{subject.name}</p>
+              {(subject.branch || subject.year) && (
+                <p className="text-sm text-muted-foreground">
+                  {[subject.branch, subject.year != null ? `Year ${subject.year}` : null]
+                    .filter(Boolean)
+                    .join(" • ")}
+                </p>
+              )}
+            </div>
             <div className="flex space-x-2">
               <button onClick={() => handleEdit(subject._id)} className="p-2 text-blue-500 hover:bg-blue-100 rounded">
                 <Icon name="Edit" size={16} />
@@ -121,14 +148,23 @@ const ManageSubjects = () => {
               onChange={handleInputChange}
               className="w-full p-2 border rounded mb-2"
             />
-            <select
+            <input
+              type="text"
               name="branch"
+              placeholder="Branch (e.g. BCA, CSE, AI)"
               value={formData.branch}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded mb-2"
+            />
+            <select
+              name="year"
+              value={formData.year}
               onChange={handleInputChange}
               className="w-full p-2 border rounded mb-4"
             >
-              {branchOptions.map(option => (
-                <option key={option} value={option}>{option}</option>
+              <option value="">Select Year</option>
+              {yearOptions.map((y) => (
+                <option key={y} value={y}>{y}</option>
               ))}
             </select>
             <div className="flex justify-end space-x-2">

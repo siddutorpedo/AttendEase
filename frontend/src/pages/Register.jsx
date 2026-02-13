@@ -11,6 +11,8 @@ const Register = () => {
     email: "",
     rollNo: "",
     branch: "",
+    year: "",
+    section: "",
     password: "",
     confirmPassword: "",
     agree: false
@@ -34,6 +36,8 @@ const Register = () => {
       !form.email ||
       !form.rollNo ||
       !form.branch ||
+      !form.year ||
+      !form.section ||
       !form.password ||
       !form.confirmPassword
     ) {
@@ -61,6 +65,8 @@ const Register = () => {
           email: form.email,
           rollNo: form.rollNo,
           branch: form.branch.trim(),
+          year: form.year ? Number(form.year) : undefined,
+          section: form.section.trim(),
           password: form.password
         })
       });
@@ -106,10 +112,24 @@ const Register = () => {
             onChange={handleChange}
           />
 
-          {/* ✅ Branch as TEXT INPUT */}
           <Input
             name="branch"
             placeholder="Branch (e.g. BCA, CSE, AI, MECH)"
+            onChange={handleChange}
+          />
+
+          <Input
+            name="year"
+            type="number"
+            placeholder="Year (e.g. 1, 2, 3)"
+            value={form.year}
+            onChange={handleChange}
+          />
+
+          <Input
+            name="section"
+            placeholder="Section (e.g. A, B)"
+            value={form.section}
             onChange={handleChange}
           />
 

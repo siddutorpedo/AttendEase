@@ -3,13 +3,13 @@ import Subject from "../models/Subject.js";
 // Create subject
 export const createSubject = async (req, res) => {
   try {
-    const { name, code, branch, classId } = req.body;
+    const { name, code, branch, year, classId } = req.body;
 
     if (!name || !code) {
       return res.status(400).json({ message: "name and code are required" });
     }
 
-    const subject = await Subject.create({ name, code, branch, classId });
+    const subject = await Subject.create({ name, code, branch, year, classId });
     res.status(201).json(subject);
   } catch (error) {
     console.error("Create Subject Error:", error);
@@ -24,7 +24,7 @@ export const getSubjects = async (req, res) => {
     const query = {};
     if (classId) query.classId = classId;
     if (branch) query.branch = branch;
-    // year can be used client-side with Class model; ignore here or extend schema if needed
+    if (year) query.year = Number(year);
 
     const subjects = await Subject.find(query);
     res.json(subjects);
@@ -49,10 +49,10 @@ export const getSubjectsByClass = async (req, res) => {
 // Update subject
 export const updateSubject = async (req, res) => {
   try {
-    const { name, code, branch, classId } = req.body;
+    const { name, code, branch, year, classId } = req.body;
     const subject = await Subject.findByIdAndUpdate(
       req.params.id,
-      { name, code, branch, classId },
+      { name, code, branch, year, classId },
       { new: true }
     );
     if (!subject) {

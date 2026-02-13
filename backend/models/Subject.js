@@ -19,6 +19,12 @@ const subjectSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Academic year (1, 2, 3...)
+    year: {
+      type: Number,
+      required: false,
+    },
+
     classId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",

@@ -11,6 +11,7 @@ import Analytics from "./pages/analytics";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import SupportCenter from "./pages/SupportCenter";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -34,10 +35,10 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Admin / Lecturer */}
+      {/* Admin / Lecturer / Student (dashboard access) */}
       <Route
         element={
-          <ProtectedRoute allowedRoles={["teacher", "admin", "student"]}>
+          <ProtectedRoute allowedRoles={["teacher", "admin", "student", "lecturer"]}>
             <MainLayout />
           </ProtectedRoute>
         }
@@ -46,7 +47,7 @@ export default function AppRoutes() {
         <Route
           path="/live-attendance"
           element={
-            <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+            <ProtectedRoute allowedRoles={["teacher", "admin", "lecturer"]}>
               <LiveAttendance />
             </ProtectedRoute>
           }
@@ -54,7 +55,7 @@ export default function AppRoutes() {
         <Route
           path="/admin-console"
           element={
-            <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+            <ProtectedRoute allowedRoles={["teacher", "admin", "lecturer"]}>
               <AdminConsole />
             </ProtectedRoute>
           }
@@ -62,7 +63,7 @@ export default function AppRoutes() {
         <Route
           path="/admin-console/manage-students"
           element={
-            <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+            <ProtectedRoute allowedRoles={["teacher", "admin", "lecturer"]}>
               <ManageStudents />
             </ProtectedRoute>
           }
@@ -70,7 +71,7 @@ export default function AppRoutes() {
         <Route
           path="/admin-console/manage-subjects"
           element={
-            <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+            <ProtectedRoute allowedRoles={["teacher", "admin", "lecturer"]}>
               <ManageSubjects />
             </ProtectedRoute>
           }
@@ -78,11 +79,12 @@ export default function AppRoutes() {
         <Route
           path="/analytics"
           element={
-            <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+            <ProtectedRoute allowedRoles={["teacher", "admin", "lecturer"]}>
               <Analytics />
             </ProtectedRoute>
           }
         />
+        <Route path="/support-center" element={<SupportCenter />} />
       </Route>
 
       {/* Fallback */}

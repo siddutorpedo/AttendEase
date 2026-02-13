@@ -55,6 +55,10 @@ export const DataProvider = ({ children }) => {
         setAttendance(attendanceData || []);
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
+        setStudents([]);
+        setSubjects([]);
+        setClasses([]);
+        setAttendance([]);
       } finally {
         setLoading(false);
       }
@@ -111,14 +115,6 @@ export const DataProvider = ({ children }) => {
     return Math.round((present / records.length) * 100);
   };
 
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading data...</p>
-      </div>
-    );
-  }
-
   return (
     <DataContext.Provider
       value={{
@@ -130,6 +126,7 @@ export const DataProvider = ({ children }) => {
         setClasses,
         attendance,
         setAttendance,
+        loading,
         markAttendance,
         getAttendanceByStudent,
         getAttendancePercentage,

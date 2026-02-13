@@ -5,7 +5,7 @@ const SubjectSelector = ({ subjects, value, onChange }) => {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="border p-3 rounded w-full max-w-md"
+      className="border border-border rounded-md px-4 py-2.5 w-full min-w-[240px] bg-white"
     >
       <option value="">Select Subject</option>
       {subjects.map(sub => (
