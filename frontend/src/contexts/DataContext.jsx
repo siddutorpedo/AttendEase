@@ -8,6 +8,7 @@ export const DataProvider = ({ children }) => {
   const [attendance, setAttendance] = useState([]);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // ───────── LOAD ALL DATA ─────────
   useEffect(() => {
@@ -65,7 +66,9 @@ export const DataProvider = ({ children }) => {
     };
 
     loadAllData();
-  }, []);
+  }, [refreshKey]);
+
+  const refreshData = () => setRefreshKey((key) => key + 1);
 
   // ───────── ATTENDANCE ─────────
   const markAttendance = async ({ subjectId, date, records }) => {
@@ -127,6 +130,7 @@ export const DataProvider = ({ children }) => {
         attendance,
         setAttendance,
         loading,
+        refreshData,
         markAttendance,
         getAttendanceByStudent,
         getAttendancePercentage,

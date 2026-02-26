@@ -3,65 +3,50 @@ import Subject from "../models/Subject.js";
 // Create subject
 export const createSubject = async (req, res) => {
   try {
-    const { name, code, branch, year, classId } = req.body;
-
-    if (!name || !code) {
-      return res.status(400).json({ message: "name and code are required" });
-    }
-
-    const subject = await Subject.create({ name, code, branch, year, classId });
+    const subject = await Subject.create(req.body);
     res.status(201).json(subject);
   } catch (error) {
-    console.error("Create Subject Error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: error.message });
   }
 };
 
-// Get all subjects (optionally filtered)
+// Get all subjects
+export const getAllSubjects = async (req, res) => {
+  try {
+    const subjects = await Subject.find();
+    res.json(subjects);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get subjects (alias for getAllSubjects)
 export const getSubjects = async (req, res) => {
   try {
-    const { classId, branch, year } = req.query;
-    const query = {};
-    if (classId) query.classId = classId;
-    if (branch) query.branch = branch;
-    if (year) query.year = Number(year);
-
-    const subjects = await Subject.find(query);
+    const subjects = await Subject.find();
     res.json(subjects);
   } catch (error) {
-    console.error("Get Subjects Error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: error.message });
   }
 };
 
-// Get subjects by class (param style)
+// Get subjects by class
 export const getSubjectsByClass = async (req, res) => {
   try {
-    const { classId } = req.params;
-    const subjects = await Subject.find({ classId });
+    const subjects = await Subject.find({ classId: req.params.classId });
     res.json(subjects);
   } catch (error) {
-    console.error("Get Subjects By Class Error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: error.message });
   }
 };
 
 // Update subject
 export const updateSubject = async (req, res) => {
   try {
-    const { name, code, branch, year, classId } = req.body;
-    const subject = await Subject.findByIdAndUpdate(
-      req.params.id,
-      { name, code, branch, year, classId },
-      { new: true }
-    );
-    if (!subject) {
-      return res.status(404).json({ message: "Subject not found" });
-    }
+    const subject = await Subject.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(subject);
   } catch (error) {
-    console.error("Update Subject Error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -69,9 +54,8 @@ export const updateSubject = async (req, res) => {
 export const deleteSubject = async (req, res) => {
   try {
     await Subject.findByIdAndDelete(req.params.id);
-    res.json({ message: "Subject deleted" });
+    res.json({ message: "Subject deleted successfully" });
   } catch (error) {
-    console.error("Delete Subject Error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: error.message });
   }
 };

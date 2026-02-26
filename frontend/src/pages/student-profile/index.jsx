@@ -142,7 +142,7 @@ const StudentProfileContent = () => {
 
           <div className="mb-6">
             <SubjectAttendanceDetails 
-              subjects={subjects}
+              subjects={subjectsForView}
               selectedSubject={selectedSubject}
               onSelectSubject={setSelectedSubject}
             />

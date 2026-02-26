@@ -9,66 +9,79 @@ import Input from "../components/ui/Input";
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { students } = useData();
+  const { refreshData } = useData();
 
   const [userType, setUserType] = useState("student");
-  const [studentName, setStudentName] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
   const [lecturerEmail, setLecturerEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
-    setTimeout(() => {
-      if (userType === "student") {
-        if (!studentName || !password) {
-          setError("Please fill in all fields");
-          setLoading(false);
-          return;
+    if (userType === "student") {
+      if (!studentEmail || !password) {
+        setError("Please fill in all fields");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await fetch("http://localhost:5000/api/students/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: studentEmail, password }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || "Invalid credentials");
         }
 
-        const studentExists = students.find(
-          (s) => s.name.toLowerCase() === studentName.toLowerCase()
-        );
-
-        if (!studentExists) {
-          setError("Student not found. Contact administrator.");
-          setLoading(false);
-          return;
+        if (data.token) {
+          localStorage.setItem("attendeaseToken", data.token);
         }
 
         login({
-          id: Date.now(),
-          name: studentExists.name,
-          email: studentExists.email,
-          rollNo: studentExists.roll,
-          type: "student"
+          id: data.student.id,
+          name: data.student.name,
+          email: data.student.email,
+          rollNo: data.student.rollNo,
+          type: "student",
         });
 
-        navigate("/student-profile");
-      } else {
-        if (!lecturerEmail || !password) {
-          setError("Please fill in all fields");
-          setLoading(false);
-          return;
-        }
+        // Reload data (students, subjects, attendance) with fresh token
+        refreshData();
 
+        navigate("/student-profile");
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      if (!lecturerEmail || !password) {
+        setError("Please fill in all fields");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // Simple local lecturer login for now
         login({
           id: Date.now(),
           email: lecturerEmail,
           type: "lecturer",
-          name: "Lecturer"
+          name: "Lecturer",
         });
-
         navigate("/dashboard");
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
-    }, 600);
+    }
   };
 
   return (
@@ -106,9 +119,10 @@ const Login = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           {userType === "student" && (
             <Input
-              placeholder="Student Name"
-              value={studentName}
-              onChange={(e) => setStudentName(e.target.value)}
+              type="email"
+              placeholder="Student Email"
+              value={studentEmail}
+              onChange={(e) => setStudentEmail(e.target.value)}
             />
           )}
 

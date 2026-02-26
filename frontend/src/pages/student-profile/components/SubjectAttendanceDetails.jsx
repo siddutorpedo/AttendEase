@@ -26,7 +26,13 @@ const SubjectAttendanceDetails = ({ subjects, selectedSubject, onSelectSubject }
       {/* Subject Details */}
       {subjects.map((subject) => {
         if (selectedSubject !== subject.id) return null;
-        
+
+        const total = subject.totalClasses || 0;
+        const attended = subject.classesAttended || 0;
+        const absences = subject.absences || 0;
+        const percentage =
+          total === 0 ? 0 : Math.round((attended / total) * 100);
+
         return (
           <div key={subject.id} className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
@@ -34,7 +40,7 @@ const SubjectAttendanceDetails = ({ subjects, selectedSubject, onSelectSubject }
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Total Classes</p>
-                    <p className="text-2xl font-bold text-foreground">{subject.totalClasses}</p>
+                    <p className="text-2xl font-bold text-foreground">{total}</p>
                   </div>
                   <Icon name="BookOpen" size={32} className="text-primary opacity-50" />
                 </div>
@@ -44,7 +50,7 @@ const SubjectAttendanceDetails = ({ subjects, selectedSubject, onSelectSubject }
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-success mb-1">Classes Attended</p>
-                    <p className="text-2xl font-bold text-success">{subject.classesAttended}</p>
+                    <p className="text-2xl font-bold text-success">{attended}</p>
                   </div>
                   <Icon name="CheckCircle2" size={32} className="text-success opacity-50" />
                 </div>
@@ -54,7 +60,7 @@ const SubjectAttendanceDetails = ({ subjects, selectedSubject, onSelectSubject }
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-error mb-1">Absences</p>
-                    <p className="text-2xl font-bold text-error">{subject.absences}</p>
+                    <p className="text-2xl font-bold text-error">{absences}</p>
                   </div>
                   <Icon name="XCircle" size={32} className="text-error opacity-50" />
                 </div>
@@ -66,13 +72,13 @@ const SubjectAttendanceDetails = ({ subjects, selectedSubject, onSelectSubject }
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-foreground">Attendance Rate</p>
                 <p className="text-lg font-bold text-primary">
-                  {Math.round((subject.classesAttended / subject.totalClasses) * 100)}%
+                  {percentage}%
                 </p>
               </div>
               <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${(subject.classesAttended / subject.totalClasses) * 100}%` }}
+                  style={{ width: `${percentage}%` }}
                 />
               </div>
             </div>

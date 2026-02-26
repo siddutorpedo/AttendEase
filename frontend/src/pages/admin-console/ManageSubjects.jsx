@@ -76,8 +76,12 @@ const ManageSubjects = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-
     const saved = await res.json();
+
+    if (!res.ok) {
+      alert(saved.message || "Failed to save subject (check code uniqueness)");
+      return;
+    }
     const normalized = { ...saved, id: saved._id || saved.id };
     if (editingId) {
       setSubjects((prev) =>
