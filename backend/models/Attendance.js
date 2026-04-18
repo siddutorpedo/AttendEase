@@ -24,14 +24,23 @@ const attendanceSchema = new mongoose.Schema(
       enum: ["present", "absent"],
       required: true,
     },
+
+    markedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );
 
-// Prevent duplicate attendance for same day
+// Prevent duplicate attendance for same student+subject+date
 attendanceSchema.index(
   { student: 1, subject: 1, date: 1 },
   { unique: true }
 );
+
+// Fast lookups by subject, by student
+attendanceSchema.index({ subject: 1, date: 1 });
+attendanceSchema.index({ student: 1 });
 
 export default mongoose.model("Attendance", attendanceSchema);

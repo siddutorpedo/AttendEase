@@ -1,104 +1,29 @@
-import Student from "../models/Student.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import * as studentService from "../services/studentService.js";
 
-/* ================= REGISTER STUDENT ================= */
-export const registerStudent = async (req, res) => {
+export const getAllStudents = async (req, res, next) => {
   try {
-    const { name, email, rollNo, branch, year, section, password } = req.body;
-
-    if (!name || !email || !rollNo || !branch || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    const existingStudent = await Student.findOne({
-      $or: [{ email }, { rollNo }],
-    });
-
-    if (existingStudent) {
-      return res.status(409).json({ message: "Student already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const student = await Student.create({
-      name,
-      email,
-      rollNo,
-      branch,
-      year,
-      section,
-      password: hashedPassword,
-    });
-
-    res.status(201).json({
-      message: "Student registered successfully",
-      studentId: student._id,
-    });
+    const result = await studentService.getAll(req.query);
+    // Legacy compat: frontend expects flat array from GET /api/students
+    res.json(result.students);
   } catch (error) {
-    console.error("Register Student Error:", error);
-    res.status(500).json({ message: "Server error" });
+    next(error);
   }
 };
 
-/* ================= LOGIN STUDENT ================= */
-export const loginStudent = async (req, res) => {
+export const getStudentById = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-
-    const student = await Student.findOne({ email });
-    if (!student) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    const isMatch = await bcrypt.compare(password, student.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    const token = jwt.sign(
-      { id: student._id, role: "student" },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({
-      message: "Login successful",
-      token,
-      student: {
-        id: student._id,
-        name: student.name,
-        email: student.email,
-        rollNo: student.rollNo,
-        branch: student.branch,
-      },
-    });
+    const student = await studentService.getById(req.params.id);
+    res.json(student);
   } catch (error) {
-    console.error("Login Student Error:", error);
-    res.status(500).json({ message: "Server error" });
+    next(error);
   }
 };
 
-/* ================= GET ALL STUDENTS (ADMIN) ================= */
-export const getAllStudents = async (req, res) => {
+export const deleteStudent = async (req, res, next) => {
   try {
-    const students = await Student.find().select("-password");
-    res.json(students);
+    const result = await studentService.remove(req.params.id);
+    res.json(result);
   } catch (error) {
-    console.error("Fetch Students Error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/* ================= DELETE STUDENT (ADMIN) ================= */
-export const deleteStudent = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    await Student.findByIdAndDelete(id);
-    res.json({ message: "Student deleted successfully" });
-  } catch (error) {
-    console.error("Delete Student Error:", error);
-    res.status(500).json({ message: "Server error" });
+    next(error);
   }
 };

@@ -1,61 +1,46 @@
-import Subject from "../models/Subject.js";
+import * as subjectService from "../services/subjectService.js";
 
-// Create subject
-export const createSubject = async (req, res) => {
+export const getSubjects = async (req, res, next) => {
   try {
-    const subject = await Subject.create(req.body);
+    const subjects = await subjectService.getAll(req.query);
+    res.json(subjects);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSubjectsByClass = async (req, res, next) => {
+  try {
+    const subjects = await subjectService.getByClass(req.params.classId);
+    res.json(subjects);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createSubject = async (req, res, next) => {
+  try {
+    const subject = await subjectService.create(req.body);
     res.status(201).json(subject);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-// Get all subjects
-export const getAllSubjects = async (req, res) => {
+export const updateSubject = async (req, res, next) => {
   try {
-    const subjects = await Subject.find();
-    res.json(subjects);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get subjects (alias for getAllSubjects)
-export const getSubjects = async (req, res) => {
-  try {
-    const subjects = await Subject.find();
-    res.json(subjects);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get subjects by class
-export const getSubjectsByClass = async (req, res) => {
-  try {
-    const subjects = await Subject.find({ classId: req.params.classId });
-    res.json(subjects);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Update subject
-export const updateSubject = async (req, res) => {
-  try {
-    const subject = await Subject.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const subject = await subjectService.update(req.params.id, req.body);
     res.json(subject);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-// Delete subject
-export const deleteSubject = async (req, res) => {
+export const deleteSubject = async (req, res, next) => {
   try {
-    await Subject.findByIdAndDelete(req.params.id);
-    res.json({ message: "Subject deleted successfully" });
+    const result = await subjectService.remove(req.params.id);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useData } from "../../contexts/DataContext";
+import classService from "../../services/classService";
 
 const AdminConsole = () => {
   const navigate = useNavigate();
@@ -14,10 +15,8 @@ const AdminConsole = () => {
   const [classForm, setClassForm] = useState({ branch: "", year: "", section: "" });
 
   useEffect(() => {
-    // ensure latest classes from API if none loaded yet
     if (!classes || classes.length === 0) {
-      fetch("http://localhost:5000/api/classes")
-        .then((res) => res.json())
+      classService.getAll()
         .then((data) => setClasses(data))
         .catch(() => {});
     }
@@ -34,23 +33,15 @@ const AdminConsole = () => {
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/api/classes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          branch: classForm.branch.trim(),
-          year: Number(classForm.year),
-          section: classForm.section.trim(),
-        }),
+      const saved = await classService.create({
+        branch: classForm.branch.trim(),
+        year: Number(classForm.year),
+        section: classForm.section.trim(),
       });
-      const saved = await res.json();
-      if (!res.ok) {
-        throw new Error(saved.message || "Failed to create class");
-      }
       setClasses((prev) => [...prev, saved]);
       setShowClassModal(false);
     } catch (e) {
-      alert(e.message);
+      alert(e.response?.data?.message || e.message || "Failed to create class");
     }
   };
 

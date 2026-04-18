@@ -2,64 +2,47 @@ import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    email: {
-      type: String,
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
       unique: true,
-      lowercase: true,
-    },
-
-    password: {
-      type: String,
-      required: true,
     },
 
     rollNo: {
       type: String,
-      required: true,
+      required: [true, "Roll number is required"],
       unique: true,
+      trim: true,
     },
 
     branch: {
       type: String,
-      required: true,
-      trim: true, // ✅ student types branch
-    },
-
-    // Section (A, B, etc.)
-    section: {
-      type: String,
-      required: false,
+      required: [true, "Branch is required"],
       trim: true,
     },
 
-    // Academic year (1,2,3...)
-    year: {
-      type: Number,
-      required: false,
+    section: {
+      type: String,
+      trim: true,
     },
 
-    // Optional reference to Class to support class-level reporting
+    year: {
+      type: Number,
+      min: 1,
+      max: 6,
+    },
+
     classId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
-      required: false,
-    },
-
-    // Simple role field to distinguish between student/teacher/admin
-    role: {
-      type: String,
-      enum: ["student", "teacher", "admin"],
-      default: "student",
     },
   },
   { timestamps: true }
 );
+
+// Indexes for common queries
+studentSchema.index({ branch: 1, year: 1, section: 1 });
+studentSchema.index({ classId: 1 });
 
 export default mongoose.model("Student", studentSchema);

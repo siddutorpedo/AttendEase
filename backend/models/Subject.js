@@ -2,36 +2,45 @@ import mongoose from "mongoose";
 
 const subjectSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    name: {
+      type: String,
+      required: [true, "Subject name is required"],
+      trim: true,
+    },
 
-    // Short subject code like CS101
     code: {
       type: String,
-      required: true,
+      required: [true, "Subject code is required"],
       trim: true,
       unique: true,
+      uppercase: true,
     },
 
-    // Optional branch for easier filtering in UI
     branch: {
       type: String,
-      required: false,
       trim: true,
     },
 
-    // Academic year (1, 2, 3...)
     year: {
       type: Number,
-      required: false,
+      min: 1,
+      max: 6,
+    },
+
+    teacher: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
 
     classId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
-      required: false, // keep optional to avoid blocking simple setups
     },
   },
   { timestamps: true }
 );
+
+subjectSchema.index({ branch: 1, year: 1 });
+subjectSchema.index({ teacher: 1 });
 
 export default mongoose.model("Subject", subjectSchema);

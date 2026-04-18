@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import Icon from "../../components/AppIcon";
 import { useData } from "../../contexts/DataContext";
-
-const API = "http://localhost:5000/api/students";
+import studentService from "../../services/studentService";
 
 const ManageStudents = () => {
   const { students, setStudents } = useData();
@@ -13,10 +12,11 @@ const ManageStudents = () => {
     if (!window.confirm("Delete this student?")) return;
 
     try {
-      await fetch(`${API}/${id}`, { method: "DELETE" });
+      await studentService.delete(id);
       setStudents((prev) => prev.filter((s) => s._id !== id && s.id !== id));
     } catch (err) {
       console.error("Delete failed:", err);
+      alert(err.response?.data?.message || "Failed to delete student");
     }
   };
 

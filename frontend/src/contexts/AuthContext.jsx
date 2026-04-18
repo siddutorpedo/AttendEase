@@ -1,44 +1,59 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import { createContext, useState, useContext, useEffect, useCallback } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null); // 🔥 NEW
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const savedUser = localStorage.getItem("attendeaseUser");
-    if (savedUser) {
+    const token = localStorage.getItem("attendeaseToken");
+    if (savedUser && token) {
       const userData = JSON.parse(savedUser);
       setUser(userData);
-      setRole(userData.type); // 🔥 NEW
+      // Support both old "type" field and new "role" field
+      setRole(userData.role || userData.type);
       setIsAuthenticated(true);
     }
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-    setRole(userData.type); // 🔥 NEW
-    setIsAuthenticated(true);
-    localStorage.setItem("attendeaseUser", JSON.stringify(userData));
-  };
+  const login = useCallback((userData, token) => {
+    // Store token
+    if (token) {
+      localStorage.setItem("attendeaseToken", token);
+    }
+    // Normalize role: map "lecturer" → "teacher" for backend compat
+    const normalizedRole = userData.role || userData.type;
+    const userToStore = { ...userData, role: normalizedRole };
 
-  const register = (userData) => {
-    setUser(userData);
-    setRole("student"); // 🔥 Registration = student only
+    setUser(userToStore);
+    setRole(normalizedRole);
     setIsAuthenticated(true);
-    localStorage.setItem("attendeaseUser", JSON.stringify(userData));
-  };
+    localStorage.setItem("attendeaseUser", JSON.stringify(userToStore));
+  }, []);
 
-  const logout = () => {
+  const register = useCallback((userData, token) => {
+    if (token) {
+      localStorage.setItem("attendeaseToken", token);
+    }
+    const userToStore = { ...userData, role: "student" };
+    setUser(userToStore);
+    setRole("student");
+    setIsAuthenticated(true);
+    localStorage.setItem("attendeaseUser", JSON.stringify(userToStore));
+  }, []);
+
+  const logout = useCallback(() => {
     setUser(null);
     setRole(null);
     setIsAuthenticated(false);
     localStorage.removeItem("attendeaseUser");
-  };
+    localStorage.removeItem("attendeaseToken");
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -49,7 +64,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         register,
-        logout
+        logout,
       }}
     >
       {children}

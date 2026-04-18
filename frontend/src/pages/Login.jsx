@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useData } from "../contexts/DataContext";
-import Icon from "../components/AppIcon";
+import authService from "../services/authService";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 
@@ -12,8 +12,7 @@ const Login = () => {
   const { refreshData } = useData();
 
   const [userType, setUserType] = useState("student");
-  const [studentEmail, setStudentEmail] = useState("");
-  const [lecturerEmail, setLecturerEmail] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,72 +21,55 @@ const Login = () => {
     e.preventDefault();
     setError("");
 
-    if (userType === "student") {
-      if (!studentEmail || !password) {
-        setError("Please fill in all fields");
-        return;
-      }
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      return;
+    }
 
-      setLoading(true);
-      try {
-        const res = await fetch("http://localhost:5000/api/students/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: studentEmail, password }),
-        });
+    setLoading(true);
+    try {
+      const data = await authService.login({ email, password });
 
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.message || "Invalid credentials");
-        }
+      // Determine role from backend response
+      const role = data.user?.role || userType;
 
-        if (data.token) {
-          localStorage.setItem("attendeaseToken", data.token);
-        }
+      login(
+        {
+          id: data.user?.id || data.student?.id,
+          name: data.user?.name || data.student?.name || "User",
+          email: data.user?.email || email,
+          rollNo: data.student?.rollNo,
+          role,
+          // Keep "type" for legacy compat with existing pages
+          type: role === "teacher" ? "lecturer" : role,
+        },
+        data.token
+      );
 
-        login({
-          id: data.student.id,
-          name: data.student.name,
-          email: data.student.email,
-          rollNo: data.student.rollNo,
-          type: "student",
-        });
+      // Reload data with fresh token
+      refreshData();
 
-        // Reload data (students, subjects, attendance) with fresh token
-        refreshData();
-
+      // Route based on role
+      if (role === "student") {
         navigate("/student-profile");
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      if (!lecturerEmail || !password) {
-        setError("Please fill in all fields");
-        return;
-      }
-
-      setLoading(true);
-      try {
-        // Simple local lecturer login for now
-        login({
-          id: Date.now(),
-          email: lecturerEmail,
-          type: "lecturer",
-          name: "Lecturer",
-        });
+      } else {
         navigate("/dashboard");
-      } finally {
-        setLoading(false);
       }
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0] ||
+        err.message ||
+        "Login failed";
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md bg-card p-8 rounded-xl shadow-lg border">
-
         <h1 className="text-3xl font-bold text-center mb-2">AttendEase</h1>
         <p className="text-center text-muted-foreground mb-6">
           Attendance Management System
@@ -97,8 +79,8 @@ const Login = () => {
         <div className="flex gap-3 mb-6">
           <button
             type="button"
-            onClick={() => setUserType("student")}
-            className={`flex-1 py-2 rounded-lg border ${
+            onClick={() => { setUserType("student"); setError(""); }}
+            className={`flex-1 py-2 rounded-lg border transition-colors ${
               userType === "student" ? "bg-primary text-white" : "bg-muted"
             }`}
           >
@@ -106,8 +88,8 @@ const Login = () => {
           </button>
           <button
             type="button"
-            onClick={() => setUserType("lecturer")}
-            className={`flex-1 py-2 rounded-lg border ${
+            onClick={() => { setUserType("lecturer"); setError(""); }}
+            className={`flex-1 py-2 rounded-lg border transition-colors ${
               userType === "lecturer" ? "bg-primary text-white" : "bg-muted"
             }`}
           >
@@ -115,25 +97,23 @@ const Login = () => {
           </button>
         </div>
 
+        {/* HINT for lecturer */}
+        {userType === "lecturer" && (
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg">
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+              <strong>Default:</strong> teacher@attendease.edu / teacher123
+            </p>
+          </div>
+        )}
+
         {/* LOGIN FORM */}
         <form onSubmit={handleLogin} className="space-y-4">
-          {userType === "student" && (
-            <Input
-              type="email"
-              placeholder="Student Email"
-              value={studentEmail}
-              onChange={(e) => setStudentEmail(e.target.value)}
-            />
-          )}
-
-          {userType === "lecturer" && (
-            <Input
-              type="email"
-              placeholder="Lecturer Email"
-              value={lecturerEmail}
-              onChange={(e) => setLecturerEmail(e.target.value)}
-            />
-          )}
+          <Input
+            type="email"
+            placeholder={userType === "student" ? "Student Email" : "Lecturer Email"}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
           <Input
             type="password"
@@ -143,11 +123,20 @@ const Login = () => {
           />
 
           {error && (
-            <p className="text-sm text-red-500">{error}</p>
+            <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg">
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            </div>
           )}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? (
+              <span className="flex items-center gap-2 justify-center">
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Logging in...
+              </span>
+            ) : (
+              "Login"
+            )}
           </Button>
         </form>
 
@@ -155,7 +144,7 @@ const Login = () => {
         {userType === "student" && (
           <>
             <div className="my-5 text-center text-sm text-muted-foreground">
-              Don’t have an account?
+              Don't have an account?
             </div>
 
             <Button
@@ -165,7 +154,6 @@ const Login = () => {
             >
               Create Student Account
             </Button>
-
           </>
         )}
       </div>

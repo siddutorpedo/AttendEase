@@ -1,4 +1,8 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
+import studentService from "../services/studentService";
+import subjectService from "../services/subjectService";
+import attendanceService from "../services/attendanceService";
+import classService from "../services/classService";
 
 const DataContext = createContext(null);
 
@@ -8,41 +12,34 @@ export const DataProvider = ({ children }) => {
   const [attendance, setAttendance] = useState([]);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // ───────── LOAD ALL DATA ─────────
   useEffect(() => {
     const loadAllData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const token = localStorage.getItem("attendeaseToken");
-        const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-        const [studentsRes, subjectsRes, attendanceRes, classesRes] = await Promise.all([
-          fetch("http://localhost:5000/api/students"),
-          fetch("http://localhost:5000/api/subjects"),
-          fetch("http://localhost:5000/api/attendance", headers ? { headers } : undefined),
-          fetch("http://localhost:5000/api/classes"),
+        const [studentsData, subjectsData, classesData] = await Promise.all([
+          studentService.getAll().catch(() => []),
+          subjectService.getAll().catch(() => []),
+          classService.getAll().catch(() => []),
         ]);
 
-        if (!studentsRes.ok || !subjectsRes.ok) {
-          throw new Error("Students or subjects API response error");
-        }
-
-        const studentsData = await studentsRes.json();
-        const subjectsData = await subjectsRes.json();
-        const classesData = classesRes.ok ? await classesRes.json() : [];
-
+        // Attendance requires auth — might fail if not logged in
         let attendanceData = [];
-        if (attendanceRes.ok) {
-          attendanceData = await attendanceRes.json();
+        try {
+          attendanceData = await attendanceService.getAll();
+        } catch {
+          // silently fail — user might not be logged in
         }
 
-        // Normalize student/subject shapes for components
+        // Normalize shapes for components
         const normalizedStudents = (studentsData || []).map((s) => ({
           ...s,
           id: s._id || s.id,
           roll: s.rollNo || s.roll,
-          year: s.year,
-          section: s.section,
         }));
 
         const normalizedSubjects = (subjectsData || []).map((sub) => ({
@@ -53,9 +50,10 @@ export const DataProvider = ({ children }) => {
         setStudents(normalizedStudents);
         setSubjects(normalizedSubjects);
         setClasses(classesData || []);
-        setAttendance(attendanceData || []);
-      } catch (error) {
-        console.error("Failed to load dashboard data:", error);
+        setAttendance(Array.isArray(attendanceData) ? attendanceData : []);
+      } catch (err) {
+        console.error("Failed to load data:", err);
+        setError(err.message);
         setStudents([]);
         setSubjects([]);
         setClasses([]);
@@ -68,77 +66,61 @@ export const DataProvider = ({ children }) => {
     loadAllData();
   }, [refreshKey]);
 
-  const refreshData = () => setRefreshKey((key) => key + 1);
+  const refreshData = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   // ───────── ATTENDANCE ─────────
-  const markAttendance = async ({ subjectId, date, records }) => {
+  const markAttendance = useCallback(async ({ subjectId, date, records }) => {
+    await attendanceService.mark({ subjectId, date, records });
+    // Refresh attendance after marking
     try {
-      const token = localStorage.getItem("attendeaseToken");
-      const headers = {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
-      const res = await fetch("http://localhost:5000/api/attendance/mark", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ subjectId, date, records }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to mark attendance");
-      }
-
-      // Refresh attendance list after saving
-      const allHeaders = token ? { Authorization: `Bearer ${token}` } : undefined;
-      const allRes = await fetch("http://localhost:5000/api/attendance", {
-        headers: allHeaders,
-      });
-
-      if (allRes.ok) {
-        const allData = await allRes.json();
-        setAttendance(allData || []);
-      }
-    } catch (error) {
-      console.error("Mark attendance failed:", error);
+      const fresh = await attendanceService.getAll();
+      setAttendance(Array.isArray(fresh) ? fresh : []);
+    } catch {
+      // ignore refresh failure
     }
-  };
+  }, []);
 
   // ───────── HELPERS ─────────
-  const getAttendanceByStudent = (studentId) =>
-    attendance.filter((a) => {
-      const aStudentId = a.student?._id || a.studentId || a.student;
-      return String(aStudentId) === String(studentId);
-    });
-
-  const getAttendancePercentage = (studentId) => {
-    const records = getAttendanceByStudent(studentId);
-    if (records.length === 0) return 0;
-
-    const present = records.filter(r => r.status === "present").length;
-    return Math.round((present / records.length) * 100);
-  };
-
-  return (
-    <DataContext.Provider
-      value={{
-        students,
-        setStudents,
-        subjects,
-        setSubjects,
-        classes,
-        setClasses,
-        attendance,
-        setAttendance,
-        loading,
-        refreshData,
-        markAttendance,
-        getAttendanceByStudent,
-        getAttendancePercentage,
-      }}
-    >
-      {children}
-    </DataContext.Provider>
+  const getAttendanceByStudent = useCallback(
+    (studentId) =>
+      attendance.filter((a) => {
+        const aStudentId = a.student?._id || a.studentId || a.student;
+        return String(aStudentId) === String(studentId);
+      }),
+    [attendance]
   );
+
+  const getAttendancePercentage = useCallback(
+    (studentId) => {
+      const records = getAttendanceByStudent(studentId);
+      if (records.length === 0) return 0;
+      const present = records.filter((r) => r.status === "present").length;
+      return Math.round((present / records.length) * 100);
+    },
+    [getAttendanceByStudent]
+  );
+
+  const value = useMemo(
+    () => ({
+      students,
+      setStudents,
+      subjects,
+      setSubjects,
+      classes,
+      setClasses,
+      attendance,
+      setAttendance,
+      loading,
+      error,
+      refreshData,
+      markAttendance,
+      getAttendanceByStudent,
+      getAttendancePercentage,
+    }),
+    [students, subjects, classes, attendance, loading, error, refreshData, markAttendance, getAttendanceByStudent, getAttendancePercentage]
+  );
+
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
 
 export const useData = () => {

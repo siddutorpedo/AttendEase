@@ -91,6 +91,11 @@ const LiveAttendance = () => {
       })
     );
 
+    if (records.length === 0) {
+      alert("No attendance marked. Please mark at least one student or use 'Mark All Present'.");
+      return;
+    }
+
     try {
       await markAttendance({
         subjectId: selectedSubject,
