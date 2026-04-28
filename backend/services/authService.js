@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Student from "../models/Student.js";
+import Class from "../models/Class.js";
 import ApiError from "../utils/ApiError.js";
 
 /**
@@ -40,12 +41,31 @@ export const register = async (data) => {
       throw ApiError.conflict("Roll number already exists");
     }
 
+    // Auto-resolve or create Class for the student
+    let classDoc;
+    if (branch && year && section) {
+      classDoc = await Class.findOne({
+        branch: new RegExp(`^${branch}$`, "i"),
+        year: Number(year),
+        section: new RegExp(`^${section}$`, "i"),
+      });
+
+      if (!classDoc) {
+        classDoc = await Class.create({
+          branch: branch.toUpperCase(),
+          year: Number(year),
+          section: section.toUpperCase(),
+        });
+      }
+    }
+
     await Student.create({
       user: user._id,
       rollNo,
-      branch,
-      year,
-      section,
+      branch: branch ? branch.toUpperCase() : branch,
+      year: year ? Number(year) : year,
+      section: section ? section.toUpperCase() : section,
+      classId: classDoc ? classDoc._id : undefined,
     });
   }
 

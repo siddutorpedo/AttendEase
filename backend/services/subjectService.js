@@ -1,4 +1,5 @@
 import Subject from "../models/Subject.js";
+import Class from "../models/Class.js";
 import ApiError from "../utils/ApiError.js";
 
 /**
@@ -32,7 +33,30 @@ export const create = async (data) => {
   if (existing) {
     throw ApiError.conflict(`Subject with code '${data.code}' already exists`);
   }
-  return Subject.create(data);
+
+  let classDoc;
+  if (data.branch && data.year) {
+    // For subject, we might not always have section. Default to "A" or omit.
+    classDoc = await Class.findOne({
+      branch: new RegExp(`^${data.branch}$`, "i"),
+      year: Number(data.year),
+    });
+
+    if (!classDoc) {
+      classDoc = await Class.create({
+        branch: data.branch.toUpperCase(),
+        year: Number(data.year),
+        section: "A", // Default section if building from subject
+      });
+    }
+  }
+
+  const payload = {
+    ...data,
+    classId: classDoc ? classDoc._id : undefined,
+  };
+
+  return Subject.create(payload);
 };
 
 /**

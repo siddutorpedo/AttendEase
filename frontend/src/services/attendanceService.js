@@ -4,8 +4,8 @@ import api from "./api";
  * Attendance API service.
  */
 const attendanceService = {
-  getAll: async () => {
-    const { data } = await api.get("/attendance");
+  getAll: async (params = {}) => {
+    const { data } = await api.get("/attendance", { params });
     return data;
   },
 
@@ -30,6 +30,19 @@ const attendanceService = {
     });
     return data;
   },
+
+  getDefaulters: async (threshold = 75, params = {}) => {
+    const { data } = await api.get("/attendance/defaulters", {
+      params: { threshold, ...params },
+    });
+    return data;
+  },
+
+  getDashboardStats: async () => {
+    const { data } = await api.get("/attendance/dashboard-stats");
+    return data;
+  },
 };
 
 export default attendanceService;
+

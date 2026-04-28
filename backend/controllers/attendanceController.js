@@ -59,3 +59,22 @@ export const getPercentage = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getDefaulters = async (req, res, next) => {
+  try {
+    const threshold = req.query.threshold ? Number(req.query.threshold) : 75;
+    const result = await attendanceService.getDefaulters(threshold, req.query);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getDashboardStats = async (req, res, next) => {
+  try {
+    const result = await attendanceService.getDashboardStats();
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};

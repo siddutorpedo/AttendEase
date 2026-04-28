@@ -125,3 +125,107 @@ export const getPercentage = async (studentId, subjectId) => {
     percentage: Math.round((present / records.length) * 100),
   };
 };
+
+/**
+ * Get all students with attendance below threshold (defaulters).
+ */
+export const getDefaulters = async (threshold = 75, { subjectId } = {}) => {
+  const allStudents = await Student.find().populate("user", "name email");
+
+  const results = [];
+
+  for (const student of allStudents) {
+    const query = { student: student._id };
+    if (subjectId) query.subject = subjectId;
+
+    const records = await Attendance.find(query);
+    if (records.length === 0) continue; // skip students with no records
+
+    const present = records.filter((r) => r.status === "present").length;
+    const percentage = Math.round((present / records.length) * 100);
+
+    if (percentage < threshold) {
+      results.push({
+        _id: student._id,
+        name: student.user?.name || "",
+        email: student.user?.email || "",
+        rollNo: student.rollNo,
+        branch: student.branch,
+        year: student.year,
+        section: student.section,
+        total: records.length,
+        present,
+        absent: records.length - present,
+        percentage,
+      });
+    }
+  }
+
+  return results.sort((a, b) => a.percentage - b.percentage);
+};
+
+/**
+ * Get aggregated dashboard statistics.
+ */
+export const getDashboardStats = async () => {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
+  // Count totals
+  const [totalStudents, totalClasses, totalSubjects, totalRecords] = await Promise.all([
+    Student.countDocuments(),
+    (await import("../models/Class.js")).default.countDocuments(),
+    (await import("../models/Subject.js")).default.countDocuments(),
+    Attendance.countDocuments(),
+  ]);
+
+  // Today's attendance
+  const todayRecords = await Attendance.find({
+    date: { $gte: todayStart, $lt: todayEnd },
+  });
+
+  const todayPresent = todayRecords.filter((r) => r.status === "present").length;
+  const todayAbsent = todayRecords.filter((r) => r.status === "absent").length;
+
+  // Recent 5 attendance records
+  const recentRecords = await Attendance.find()
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .populate("student")
+    .populate("subject", "name code");
+
+  const recent = recentRecords.map((r) => ({
+    _id: r._id,
+    studentName: r.student?.user?.name || r.student?.rollNo || "Unknown",
+    rollNo: r.student?.rollNo || "-",
+    subjectName: r.subject?.name || "Unknown",
+    subjectCode: r.subject?.code || "",
+    status: r.status,
+    date: r.date,
+  }));
+
+  // Overall attendance %
+  const allRecords = await Attendance.find();
+  const overallPresent = allRecords.filter((r) => r.status === "present").length;
+  const overallPercentage = allRecords.length
+    ? Math.round((overallPresent / allRecords.length) * 100)
+    : 0;
+
+  return {
+    totalStudents,
+    totalClasses,
+    totalSubjects,
+    totalRecords,
+    today: {
+      total: todayRecords.length,
+      present: todayPresent,
+      absent: todayAbsent,
+      percentage: todayRecords.length
+        ? Math.round((todayPresent / todayRecords.length) * 100)
+        : 0,
+    },
+    overallPercentage,
+    recent,
+  };
+};

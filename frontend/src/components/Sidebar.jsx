@@ -9,6 +9,11 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse }) => {
   const { logout, user } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  // Normalize role: support both 'role' and legacy 'type' fields
+  // Map 'teacher' → 'lecturer' for sidebar matching
+  const rawRole = user?.role || user?.type || 'student';
+  const userRole = rawRole === 'teacher' ? 'lecturer' : rawRole;
+
   // Define navigation items with role restrictions
   const navigationItems = [
     { path: '/dashboard', label: 'Dashboard', icon: 'LayoutDashboard', allowedRoles: ['lecturer'] },
@@ -21,13 +26,13 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse }) => {
 
   // Filter items based on user role
   const availableItems = navigationItems.filter(item =>
-    item.allowedRoles.includes(user?.type)
+    item.allowedRoles.includes(userRole)
   );
 
   // Get all items but separate by availability
   const filteredItems = {
-    available: navigationItems.filter(item => item.allowedRoles.includes(user?.type)),
-    disabled: navigationItems.filter(item => !item.allowedRoles.includes(user?.type))
+    available: navigationItems.filter(item => item.allowedRoles.includes(userRole)),
+    disabled: navigationItems.filter(item => !item.allowedRoles.includes(userRole))
   };
 
   const handleNavigation = (path) => {
@@ -124,7 +129,7 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse }) => {
           ))}
 
           {/* Disabled Navigation Items (for students) */}
-          {filteredItems.disabled?.length > 0 && user?.type === 'student' && (
+          {filteredItems.disabled?.length > 0 && userRole === 'student' && (
             <>
               <div className="px-3 py-2 mt-4 mb-2">
                 <p className="text-xs font-semibold text-muted-foreground/60 uppercase">
@@ -153,9 +158,9 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse }) => {
         <div className="absolute bottom-0 left-0 right-0 border-t border-border p-4 bg-card">
           <div className="mb-3">
             <p className="text-xs text-muted-foreground uppercase font-semibold">
-              {user?.type === 'student' ? '👨‍🎓 Student' : '👨‍🏫 Lecturer'}
+              {userRole === 'student' ? '👨‍🎓 Student' : '👨‍🏫 Lecturer'}
             </p>
-            <p className="text-sm font-medium text-foreground truncate">{user?.fullName || user?.email}</p>
+            <p className="text-sm font-medium text-foreground truncate">{user?.name || user?.fullName || user?.email}</p>
           </div>
           <button
             onClick={handleLogout}

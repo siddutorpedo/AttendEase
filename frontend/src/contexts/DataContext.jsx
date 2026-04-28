@@ -36,13 +36,15 @@ export const DataProvider = ({ children }) => {
         }
 
         // Normalize shapes for components
-        const normalizedStudents = (studentsData || []).map((s) => ({
+        const studentsList = Array.isArray(studentsData) ? studentsData : (studentsData?.students || []);
+        const normalizedStudents = studentsList.map((s) => ({
           ...s,
           id: s._id || s.id,
           roll: s.rollNo || s.roll,
         }));
 
-        const normalizedSubjects = (subjectsData || []).map((sub) => ({
+        const subjectsList = Array.isArray(subjectsData) ? subjectsData : (subjectsData?.subjects || []);
+        const normalizedSubjects = subjectsList.map((sub) => ({
           ...sub,
           id: sub._id || sub.id,
         }));

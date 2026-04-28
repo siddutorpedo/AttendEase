@@ -6,6 +6,8 @@ import {
   getAttendanceBySubject,
   getAttendanceByClass,
   getPercentage,
+  getDefaulters,
+  getDashboardStats,
 } from "../../controllers/attendanceController.js";
 import auth from "../../middleware/auth.js";
 import authorize from "../../middleware/authorize.js";
@@ -13,6 +15,12 @@ import validate from "../../middleware/validate.js";
 import { markAttendanceSchema } from "../../validators/attendanceValidator.js";
 
 const router = express.Router();
+
+// Dashboard stats (must be before parameterized routes)
+router.get("/dashboard-stats", auth, getDashboardStats);
+
+// Defaulters
+router.get("/defaulters", auth, getDefaulters);
 
 // GET all attendance (auth required — frontend passes token)
 router.get("/", auth, getAllAttendance);
