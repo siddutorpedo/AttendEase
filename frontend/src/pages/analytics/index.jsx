@@ -129,6 +129,14 @@ export default function Analytics() {
     (s) => String(s._id || s.id) === String(selectedSubject)
   )?.name;
 
+  const filteredSubjectsForAnalytics = useMemo(() => {
+    return subjects.filter((s) => {
+      const matchesBranch = !selectedBranch || s.branch === selectedBranch;
+      const matchesYear = !selectedYear || String(s.year) === String(selectedYear);
+      return matchesBranch && matchesYear;
+    });
+  }, [subjects, selectedBranch, selectedYear]);
+
   // Fetch defaulters from API
   const fetchDefaulters = useCallback(async () => {
     setDefaultersLoading(true);
@@ -389,7 +397,7 @@ export default function Analytics() {
                 className="px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 min-w-[180px]"
               >
                 <option value="">Select Subject</option>
-                {subjects.map((s) => (
+                {filteredSubjectsForAnalytics.map((s) => (
                   <option key={s._id || s.id} value={s._id || s.id}>
                     {s.name} {s.code ? `(${s.code})` : ""}
                   </option>

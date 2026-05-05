@@ -43,7 +43,15 @@ export const getAll = async ({ page = 1, limit = 50, branch, year, section }) =>
     };
   });
 
-  return { students: result, total, page: Number(page), pages: Math.ceil(total / limit) };
+  return {
+    data: result,
+    meta: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      pages: Math.ceil(total / limit),
+    },
+  };
 };
 
 /**

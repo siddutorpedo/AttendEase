@@ -17,3 +17,12 @@ export const updateStudentSchema = Joi.object({
   year: Joi.number().integer().min(1).max(6).optional(),
   section: Joi.string().trim().optional(),
 });
+
+export const studentQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(50),
+  branch: Joi.string(),
+  year: Joi.number().integer(),
+  section: Joi.string(),
+  classId: Joi.string().hex().length(24),
+});

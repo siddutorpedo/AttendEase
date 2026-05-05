@@ -12,7 +12,11 @@ import {
 import auth from "../../middleware/auth.js";
 import authorize from "../../middleware/authorize.js";
 import validate from "../../middleware/validate.js";
-import { markAttendanceSchema } from "../../validators/attendanceValidator.js";
+import {
+  markAttendanceSchema,
+  paginationQuerySchema,
+  thresholdQuerySchema,
+} from "../../validators/attendanceValidator.js";
 
 const router = express.Router();
 
@@ -20,10 +24,10 @@ const router = express.Router();
 router.get("/dashboard-stats", auth, getDashboardStats);
 
 // Defaulters
-router.get("/defaulters", auth, getDefaulters);
+router.get("/defaulters", auth, validate(thresholdQuerySchema, "query"), getDefaulters);
 
-// GET all attendance (auth required — frontend passes token)
-router.get("/", auth, getAllAttendance);
+// GET all attendance
+router.get("/", auth, validate(paginationQuerySchema, "query"), getAllAttendance);
 
 // Mark attendance — teacher & admin
 router.post("/mark", auth, authorize("admin", "teacher"), validate(markAttendanceSchema), markAttendance);
@@ -32,10 +36,10 @@ router.post("/mark", auth, authorize("admin", "teacher"), validate(markAttendanc
 router.get("/student/:studentId", auth, getAttendanceByStudent);
 
 // By subject
-router.get("/subject/:subjectId", getAttendanceBySubject);
+router.get("/subject/:subjectId", auth, validate(paginationQuerySchema, "query"), getAttendanceBySubject);
 
 // By class
-router.get("/class/:classId", getAttendanceByClass);
+router.get("/class/:classId", auth, validate(paginationQuerySchema, "query"), getAttendanceByClass);
 
 // Percentage
 router.get("/percentage/:studentId", auth, getPercentage);

@@ -57,6 +57,15 @@ const LiveAttendance = () => {
     });
   }, [students, selectedYear, selectedBranch, selectedSection]);
 
+  const filteredSubjects = useMemo(() => {
+    if (!selectedBranch || !selectedYear) return [];
+    return subjects.filter((s) => {
+      const matchesBranch = s.branch === selectedBranch;
+      const matchesYear = String(s.year) === String(selectedYear);
+      return matchesBranch && matchesYear;
+    });
+  }, [subjects, selectedBranch, selectedYear]);
+
   useEffect(() => {
     setAttendanceMap({});
   }, [selectedSubject, selectedYear, selectedBranch, selectedSection]);
@@ -152,7 +161,7 @@ const LiveAttendance = () => {
 
         <div className="min-w-[240px]">
           <SubjectSelector
-            subjects={subjects}
+            subjects={filteredSubjects}
             value={selectedSubject}
             onChange={setSelectedSubject}
           />

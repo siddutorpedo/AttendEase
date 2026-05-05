@@ -46,6 +46,11 @@ const Login = () => {
         data.token
       );
 
+      // Clear fields on success
+      setEmail("");
+      setPassword("");
+      setError("");
+
       // Reload data with fresh token
       refreshData();
 

@@ -11,11 +11,11 @@ import authorize from "../../middleware/authorize.js";
 
 const router = express.Router();
 
-// GET all (public — frontend needs it)
-router.get("/", getClasses);
+// GET all
+router.get("/", auth, getClasses);
 
 // GET single
-router.get("/:id", getClassById);
+router.get("/:id", auth, getClassById);
 
 // CREATE — admin only
 router.post("/", auth, authorize("admin"), createClass);

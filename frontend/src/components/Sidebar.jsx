@@ -21,7 +21,6 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse }) => {
     { path: '/analytics', label: 'Analytics', icon: 'BarChart3', allowedRoles: ['lecturer'] },
     { path: '/student-profile', label: 'Student Profile', icon: 'UserCircle', allowedRoles: ['student'] },
     { path: '/admin-console', label: 'Admin Console', icon: 'Settings', allowedRoles: ['lecturer'] },
-    { path: '/support-center', label: 'Support Center', icon: 'HelpCircle', allowedRoles: ['student', 'lecturer'] },
   ];
 
   // Filter items based on user role

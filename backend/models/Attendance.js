@@ -33,13 +33,23 @@ const attendanceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Prevent duplicate attendance for same student+subject+date
+// ─── Normalization ───────────────────────────────────────────
+// Pre-save hook to strip time from date (ensure midnight UTC)
+attendanceSchema.pre("save", function (next) {
+  if (this.date) {
+    this.date.setUTCHours(0, 0, 0, 0);
+  }
+  next();
+});
+
+// ─── Uniqueness ──────────────────────────────────────────────
+// Prevent duplicate attendance for same student + subject + date
 attendanceSchema.index(
   { student: 1, subject: 1, date: 1 },
   { unique: true }
 );
 
-// Fast lookups by subject, by student
+// Fast lookups by subject and student
 attendanceSchema.index({ subject: 1, date: 1 });
 attendanceSchema.index({ student: 1 });
 

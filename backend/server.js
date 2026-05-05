@@ -1,9 +1,11 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
-import dotenv from "dotenv";
 
 import connectDB from "./config/db.js";
 import errorHandler from "./middleware/errorHandler.js";
@@ -18,7 +20,14 @@ import attendanceRoutes from "./routes/v1/attendanceRoutes.js";
 // Legacy compatibility
 import legacyRoutes from "./routes/legacy.js";
 
-dotenv.config();
+// Validate required environment variables
+const requiredEnv = ["MONGO_URI", "JWT_SECRET"];
+const missingEnv = requiredEnv.filter((env) => !process.env[env]);
+
+if (missingEnv.length > 0) {
+  console.error(`❌ Missing required environment variables: ${missingEnv.join(", ")}`);
+  process.exit(1);
+}
 
 const app = express();
 
@@ -28,14 +37,10 @@ app.use(helmet());
 // ─── CORS ────────────────────────────────────────────────
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:")) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : "http://localhost:5173",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 

@@ -1,6 +1,10 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_URL;
+
+if (!API_BASE) {
+  console.warn("⚠️ VITE_API_URL is not defined in environment variables. API calls may fail.");
+}
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -20,15 +24,20 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ── Response interceptor: handle 401 globally ────────────
+// ── Response interceptor: handle consistent structure and errors ─────
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    // Return the response body (res.data) directly.
+    // Our backend returns { success: true, data: ... }
+    return res.data;
+  },
   (error) => {
     if (error.response?.status === 401) {
       // Token expired or invalid — clear and redirect
       localStorage.removeItem("attendeaseToken");
       localStorage.removeItem("attendeaseUser");
-      // Only redirect if not already on login page
+      
+      // Prevent infinite redirect loop
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }

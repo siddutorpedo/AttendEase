@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Attendance from "../models/Attendance.js";
 import Student from "../models/Student.js";
 import ApiError from "../utils/ApiError.js";
@@ -11,7 +12,9 @@ export const markAttendance = async ({ subjectId, date, records, markedBy }) => 
     throw ApiError.badRequest("No attendance records provided");
   }
 
+  // Normalize targetDate to midnight UTC for consistent matching
   const targetDate = new Date(date);
+  targetDate.setUTCHours(0, 0, 0, 0);
 
   const bulkOps = records.map((r) => ({
     updateOne: {
@@ -30,14 +33,21 @@ export const markAttendance = async ({ subjectId, date, records, markedBy }) => 
     },
   }));
 
-  await Attendance.bulkWrite(bulkOps);
-  return { message: "Attendance marked successfully", count: records.length };
+  try {
+    await Attendance.bulkWrite(bulkOps);
+    return { message: "Attendance processed successfully", count: records.length };
+  } catch (error) {
+    if (error.code === 11000) {
+      throw ApiError.conflict("Duplicate attendance entry detected for this date.");
+    }
+    throw error;
+  }
 };
 
 /**
  * Get all attendance records (with optional pagination).
  */
-export const getAll = async ({ page, limit, subjectId, from, to }) => {
+export const getAll = async ({ page, limit = 50, subjectId, from, to }) => {
   const query = {};
   if (subjectId) query.subject = subjectId;
   if (from || to) {
@@ -46,26 +56,29 @@ export const getAll = async ({ page, limit, subjectId, from, to }) => {
     if (to) query.date.$lte = new Date(to);
   }
 
-  // If no pagination requested, return all (for frontend DataContext)
-  if (!page) {
-    const records = await Attendance.find(query)
-      .populate("student")
-      .populate("subject", "name code");
-    return records;
-  }
+  const currentPage = Number(page) || 1;
+  const currentLimit = Math.min(Number(limit), 100); // Cap at 100
+  const skip = (currentPage - 1) * currentLimit;
 
-  const skip = (Number(page) - 1) * Number(limit || 50);
   const [records, total] = await Promise.all([
     Attendance.find(query)
       .populate("student")
       .populate("subject", "name code")
       .skip(skip)
-      .limit(Number(limit || 50))
+      .limit(currentLimit)
       .sort({ date: -1 }),
     Attendance.countDocuments(query),
   ]);
 
-  return { records, total, page: Number(page), pages: Math.ceil(total / (limit || 50)) };
+  return {
+    data: records,
+    meta: {
+      total,
+      page: currentPage,
+      limit: currentLimit,
+      pages: Math.ceil(total / currentLimit),
+    },
+  };
 };
 
 /**
@@ -130,38 +143,69 @@ export const getPercentage = async (studentId, subjectId) => {
  * Get all students with attendance below threshold (defaulters).
  */
 export const getDefaulters = async (threshold = 75, { subjectId } = {}) => {
-  const allStudents = await Student.find().populate("user", "name email");
+  const match = {};
+  if (subjectId) match.subject = new mongoose.Types.ObjectId(subjectId);
 
-  const results = [];
+  const pipeline = [
+    { $match: match },
+    {
+      $group: {
+        _id: "$student",
+        total: { $sum: 1 },
+        present: {
+          $sum: { $cond: [{ $eq: ["$status", "present"] }, 1, 0] },
+        },
+      },
+    },
+    {
+      $project: {
+        student: "$_id",
+        total: 1,
+        present: 1,
+        absent: { $subtract: ["$total", "$present"] },
+        percentage: {
+          $round: [{ $multiply: [{ $divide: ["$present", "$total"] }, 100] }, 0],
+        },
+      },
+    },
+    { $match: { percentage: { $lt: threshold } } },
+    {
+      $lookup: {
+        from: "students",
+        localField: "student",
+        foreignField: "_id",
+        as: "studentInfo",
+      },
+    },
+    { $unwind: "$studentInfo" },
+    {
+      $lookup: {
+        from: "users",
+        localField: "studentInfo.user",
+        foreignField: "_id",
+        as: "userInfo",
+      },
+    },
+    { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        _id: "$student",
+        name: "$userInfo.name",
+        email: "$userInfo.email",
+        rollNo: "$studentInfo.rollNo",
+        branch: "$studentInfo.branch",
+        year: "$studentInfo.year",
+        section: "$studentInfo.section",
+        total: 1,
+        present: 1,
+        absent: 1,
+        percentage: 1,
+      },
+    },
+    { $sort: { percentage: 1 } },
+  ];
 
-  for (const student of allStudents) {
-    const query = { student: student._id };
-    if (subjectId) query.subject = subjectId;
-
-    const records = await Attendance.find(query);
-    if (records.length === 0) continue; // skip students with no records
-
-    const present = records.filter((r) => r.status === "present").length;
-    const percentage = Math.round((present / records.length) * 100);
-
-    if (percentage < threshold) {
-      results.push({
-        _id: student._id,
-        name: student.user?.name || "",
-        email: student.user?.email || "",
-        rollNo: student.rollNo,
-        branch: student.branch,
-        year: student.year,
-        section: student.section,
-        total: records.length,
-        present,
-        absent: records.length - present,
-        percentage,
-      });
-    }
-  }
-
-  return results.sort((a, b) => a.percentage - b.percentage);
+  return Attendance.aggregate(pipeline);
 };
 
 /**

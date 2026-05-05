@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SidebarProvider, useSidebar } from '../../contexts/SidebarContext';
 import Sidebar from '../../components/Sidebar';
 import ProfileHeader from './components/ProfileHeader';
@@ -15,7 +15,8 @@ const StudentProfileContent = () => {
   const [selectedSubject, setSelectedSubject] = useState('');
 
   const loggedInStudent = students.find(
-    (s) => String(s._id || s.id).toLowerCase() === String(user?.id || user?._id || '').toLowerCase()
+    (s) =>
+      String(s.user || "").toLowerCase() === String(user?.id || user?._id || "").toLowerCase()
   ) || students.find(
     (s) => s.name?.toLowerCase() === user?.name?.toLowerCase()
   );
@@ -89,7 +90,14 @@ const StudentProfileContent = () => {
   const studentIdForRecords = loggedInStudent?._id || loggedInStudent?.id;
   const attendanceRecords = studentIdForRecords ? getAttendanceByStudent(studentIdForRecords) : [];
 
-  const subjectStatsMap = subjects.reduce((acc, sub) => {
+  const studentSubjects = useMemo(() => {
+    if (!loggedInStudent) return [];
+    return subjects.filter(
+      (s) => s.branch === loggedInStudent.branch && String(s.year) === String(loggedInStudent.year)
+    );
+  }, [subjects, loggedInStudent]);
+
+  const subjectStatsMap = studentSubjects.reduce((acc, sub) => {
     acc[sub._id || sub.id] = {
       id: sub._id || sub.id,
       name: sub.name,
@@ -120,10 +128,6 @@ const StudentProfileContent = () => {
     absent: s.absences,
   }));
 
-  const handleEditProfile = () => {
-    console.log("Edit profile clicked");
-  };
-
   return (
     <>
       <Sidebar isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
@@ -131,7 +135,6 @@ const StudentProfileContent = () => {
         <div className="min-h-screen bg-background p-6">
           <ProfileHeader 
             student={studentData} 
-            onEdit={handleEditProfile}
             onProfilePhotoUpdate={handleProfilePhotoUpdate}
           />
 

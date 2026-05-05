@@ -13,11 +13,11 @@ import { createSubjectSchema, updateSubjectSchema } from "../../validators/subje
 
 const router = express.Router();
 
-// GET all subjects (public — frontend needs it)
-router.get("/", getSubjects);
+// GET all subjects
+router.get("/", auth, getSubjects);
 
 // GET by class
-router.get("/class/:classId", getSubjectsByClass);
+router.get("/class/:classId", auth, getSubjectsByClass);
 
 // CREATE — admin & teacher
 router.post("/", auth, authorize("admin", "teacher"), validate(createSubjectSchema), createSubject);
