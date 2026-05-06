@@ -120,12 +120,25 @@ const Login = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            {userType === "student" && (
+              <div className="flex justify-end mt-1">
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-xs text-primary hover:underline transition-all"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+          </div>
 
           {error && (
             <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg">

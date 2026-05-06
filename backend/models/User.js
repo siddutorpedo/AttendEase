@@ -31,6 +31,13 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "teacher", "student"],
       default: "student",
     },
+    
+    resetPasswordOTP: {
+      type: String,
+    },
+    resetPasswordOTPExpiry: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

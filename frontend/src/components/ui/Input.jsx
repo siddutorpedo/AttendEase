@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { cn } from "../../utils/cn";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Input = React.forwardRef(({
     className,
@@ -11,6 +12,7 @@ const Input = React.forwardRef(({
     id,
     ...props
 }, ref) => {
+    const [showPassword, setShowPassword] = useState(false);
     // Generate unique ID if not provided
     const inputId = id || `input-${Math.random()?.toString(36)?.substr(2, 9)}`;
 
@@ -50,6 +52,9 @@ const Input = React.forwardRef(({
     }
 
     // For regular inputs with wrapper structure
+    const isPasswordType = type === "password";
+    const currentType = isPasswordType && showPassword ? "text" : type;
+
     return (
         <div className="space-y-2">
             {label && (
@@ -65,17 +70,29 @@ const Input = React.forwardRef(({
                 </label>
             )}
 
-            <input
-                type={type}
-                className={cn(
-                    baseInputClasses,
-                    error && "border-destructive focus-visible:ring-destructive",
-                    className
+            <div className="relative">
+                <input
+                    type={currentType}
+                    className={cn(
+                        baseInputClasses,
+                        isPasswordType && "pr-10",
+                        error && "border-destructive focus-visible:ring-destructive",
+                        className
+                    )}
+                    ref={ref}
+                    id={inputId}
+                    {...props}
+                />
+                {isPasswordType && (
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                    >
+                        {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                    </button>
                 )}
-                ref={ref}
-                id={inputId}
-                {...props}
-            />
+            </div>
 
             {description && !error && (
                 <p className="text-sm text-muted-foreground">
