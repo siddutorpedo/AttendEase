@@ -37,37 +37,6 @@ const authService = {
     const { data } = await api.get("/v1/auth/me");
     return data;
   },
-
-  /**
-   * Request password reset OTP.
-   */
-  forgotPassword: async (email) => {
-    const { data } = await api.post("/v1/auth/forgot-password", { email });
-    return data;
-  },
-
-  /**
-   * Verify OTP and reset password.
-   */
-  resetPassword: async ({ email, otp, newPassword }) => {
-    const { data } = await api.post("/v1/auth/reset-password", {
-      email,
-      otp,
-      newPassword,
-    });
-    return data;
-  },
-
-  /**
-   * Verify OTP without resetting.
-   */
-  verifyOTP: async ({ email, otp }) => {
-    const { data } = await api.post("/v1/auth/verify-otp", {
-      email,
-      otp,
-    });
-    return data;
-  },
 };
 
 export default authService;

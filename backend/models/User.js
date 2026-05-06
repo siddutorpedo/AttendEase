@@ -32,12 +32,6 @@ const userSchema = new mongoose.Schema(
       default: "student",
     },
     
-    resetPasswordOTP: {
-      type: String,
-    },
-    resetPasswordOTPExpiry: {
-      type: Date,
-    },
   },
   { timestamps: true }
 );

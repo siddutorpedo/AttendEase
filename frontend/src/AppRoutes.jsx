@@ -4,7 +4,6 @@ import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
 
 // Lazy-loaded pages for better performance
 const Dashboard = lazy(() => import("./pages/dashboard"));
@@ -37,7 +36,6 @@ export default function AppRoutes() {
         {/* Public */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Student */}
         <Route

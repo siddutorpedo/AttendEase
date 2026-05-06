@@ -127,17 +127,6 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {userType === "student" && (
-              <div className="flex justify-end mt-1">
-                <button
-                  type="button"
-                  onClick={() => navigate("/forgot-password")}
-                  className="text-xs text-primary hover:underline transition-all"
-                >
-                  Forgot password?
-                </button>
-              </div>
-            )}
           </div>
 
           {error && (
