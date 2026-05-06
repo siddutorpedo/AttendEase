@@ -79,3 +79,15 @@ export const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+export const verifyOTP = async (req, res, next) => {
+  try {
+    const result = await authService.verifyOTP(req.body);
+    res.json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

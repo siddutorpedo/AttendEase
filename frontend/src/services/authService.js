@@ -57,6 +57,17 @@ const authService = {
     });
     return data;
   },
+
+  /**
+   * Verify OTP without resetting.
+   */
+  verifyOTP: async ({ email, otp }) => {
+    const { data } = await api.post("/v1/auth/verify-otp", {
+      email,
+      otp,
+    });
+    return data;
+  },
 };
 
 export default authService;

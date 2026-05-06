@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import Student from "../models/Student.js";
 import Class from "../models/Class.js";
@@ -169,8 +170,9 @@ export const forgotPassword = async (email) => {
   // 1. Generate 6-digit OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // 2. Save OTP and Expiry to user
-  user.resetPasswordOTP = otp;
+  // 2. Hash OTP and Save with Expiry to user
+  const salt = await bcrypt.genSalt(10);
+  user.resetPasswordOTP = await bcrypt.hash(otp, salt);
   user.resetPasswordOTPExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
   await user.save({ validateBeforeSave: false });
 
@@ -197,11 +199,16 @@ export const forgotPassword = async (email) => {
 export const resetPassword = async ({ email, otp, newPassword }) => {
   const user = await User.findOne({
     email,
-    resetPasswordOTP: otp,
     resetPasswordOTPExpiry: { $gt: Date.now() },
-  }).select("+password");
+  }).select("+password +resetPasswordOTP");
 
-  if (!user) {
+  if (!user || !user.resetPasswordOTP) {
+    throw ApiError.badRequest("OTP is invalid or has expired");
+  }
+
+  // Verify hashed OTP
+  const isOtpMatch = await bcrypt.compare(otp, user.resetPasswordOTP);
+  if (!isOtpMatch) {
     throw ApiError.badRequest("OTP is invalid or has expired");
   }
 
@@ -213,4 +220,26 @@ export const resetPassword = async ({ email, otp, newPassword }) => {
   await user.save(); // This will trigger the pre-save hook to hash the password
 
   return { message: "Password reset successful" };
+};
+
+/**
+ * Verify if OTP is valid without resetting password.
+ */
+export const verifyOTP = async ({ email, otp }) => {
+  const user = await User.findOne({
+    email,
+    resetPasswordOTPExpiry: { $gt: Date.now() },
+  }).select("+resetPasswordOTP");
+
+  if (!user || !user.resetPasswordOTP) {
+    throw ApiError.badRequest("OTP is invalid or has expired");
+  }
+
+  // Verify hashed OTP
+  const isOtpMatch = await bcrypt.compare(otp, user.resetPasswordOTP);
+  if (!isOtpMatch) {
+    throw ApiError.badRequest("OTP is invalid or has expired");
+  }
+
+  return { success: true, message: "OTP verified successfully" };
 };
