@@ -68,6 +68,7 @@ const Register = () => {
         year: form.year ? Number(form.year) : undefined,
         section: form.section.trim(),
         password: form.password,
+        role: "student",
       });
 
       // Auto-login after registration
@@ -90,8 +91,8 @@ const Register = () => {
       }
     } catch (err) {
       const msg =
-        err.response?.data?.message ||
         err.response?.data?.errors?.join(", ") ||
+        err.response?.data?.message ||
         err.message ||
         "Registration failed";
       setError(msg);
@@ -154,7 +155,8 @@ const Register = () => {
         <Button
           type="button"
           onClick={() => navigate("/login")}
-          className="w-full mt-4 bg-muted"
+          className="w-full mt-4 border-primary text-primary hover:bg-primary/10 hover:text-primary"
+          variant="outline"
         >
           Back to Login
         </Button>
